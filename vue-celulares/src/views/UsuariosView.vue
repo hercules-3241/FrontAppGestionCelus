@@ -6,12 +6,15 @@ import { movimientoService } from '@/services/movimientoService.ts';
 import DataTable from '@/components/DataTable.vue';
 import Modal from '@/components/Modal.vue';
 import UsuarioFilters from '@/components/UsuarioFilters.vue';
+import SkeletonLoader from '@/components/SkeletonLoader.vue';
 import Pagination from '@/components/Pagination.vue';
 
 // Estados reactivos
 const usuarios = ref([]);
 const usuariosFiltrados = ref([]);
-const loading = ref(false);
+// Arranca en true: la carga se dispara en onMounted, así el primer frame ya
+// muestra el skeleton en vez del estado vacío.
+const loading = ref(true);
 const showModal = ref(false);
 const showDeleteModal = ref(false);
 const loadingDelete = ref(false);
@@ -307,7 +310,7 @@ const guardarUsuario = async () => {
       console.log('➕ Creando nuevo usuario');
       console.log('🌐 URL completa:', `${window.location.origin}/api/usuarios`);
       console.log('📋 Headers que se enviarán:', {
-        'Authorization': 'Basic ' + localStorage.getItem('auth'),
+        'Authorization': 'Bearer ' + localStorage.getItem('token'),
         'Content-Type': 'application/json'
       });
       const response = await usuarioService.crear(usuario);
@@ -493,13 +496,15 @@ onMounted(() => {
           </div>
         </div>
         
-        <div v-if="loading" class="flex items-center justify-center py-12">
-          <div class="flex items-center gap-3 text-gray-600">
-            <div class="animate-spin rounded-full h-8 w-8 border-b-2 border-emerald-600"></div>
-            <span class="text-lg font-medium">Cargando usuarios...</span>
-          </div>
-        </div>
-        
+        <SkeletonLoader
+          v-if="loading"
+          variant="table"
+          :rows="8"
+          :cols="6"
+          :ratios="[1.2, 1.2, 1.5, 1.5, 1.3, 1.2]"
+          label="Cargando usuarios…"
+        />
+
         <div v-else-if="usuariosFiltrados.length === 0" class="text-center py-12">
           <div class="flex flex-col items-center gap-4">
             <div class="p-4 bg-gray-100 rounded-2xl">
@@ -782,18 +787,6 @@ onMounted(() => {
         </div>
       </div>
 
-      <!-- Loading overlay moderno -->
-      <div v-if="loading" class="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50">
-        <div class="bg-white/95 backdrop-blur-xl rounded-3xl shadow-2xl border border-white/20 p-8">
-          <div class="flex flex-col items-center gap-4">
-            <div class="relative">
-              <div class="animate-spin rounded-full h-12 w-12 border-4 border-emerald-200"></div>
-              <div class="animate-spin rounded-full h-12 w-12 border-4 border-emerald-600 border-t-transparent absolute top-0 left-0"></div>
-            </div>
-            <p class="text-gray-700 font-medium">Procesando...</p>
-          </div>
-        </div>
-      </div>
     </div>
   </div>
 </template>

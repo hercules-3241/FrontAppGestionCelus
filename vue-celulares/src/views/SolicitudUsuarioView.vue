@@ -294,16 +294,7 @@
           </button>
         </div>
 
-        <div v-if="loadingSolicitudes" class="text-center py-12">
-          <div class="inline-flex items-center justify-center w-16 h-16 bg-gradient-to-r from-blue-400 to-purple-400 rounded-full mb-4">
-            <svg class="animate-spin w-8 h-8 text-white" fill="none" viewBox="0 0 24 24">
-              <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
-              <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-            </svg>
-          </div>
-          <p class="text-lg font-medium text-gray-700">Cargando solicitudes...</p>
-          <p class="text-gray-500">Esto puede tomar unos segundos</p>
-        </div>
+        <SkeletonLoader v-if="loadingSolicitudes" variant="cards" :rows="4" label="Cargando solicitudes…" />
 
         <div v-else-if="misSolicitudes.length === 0" class="text-center py-16">
           <div class="inline-flex items-center justify-center w-20 h-20 bg-gradient-to-r from-gray-100 to-gray-200 rounded-full mb-6">
@@ -606,16 +597,7 @@
           </div>
         </div>
 
-        <div v-if="loadingFlota" class="text-center py-12">
-          <div class="inline-flex items-center justify-center w-16 h-16 bg-gradient-to-r from-cyan-400 to-blue-400 rounded-full mb-4">
-            <svg class="animate-spin w-8 h-8 text-white" fill="none" viewBox="0 0 24 24">
-              <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
-              <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-            </svg>
-          </div>
-          <p class="text-lg font-medium text-gray-700">Cargando flota...</p>
-          <p class="text-gray-500">Obteniendo información de usuarios</p>
-        </div>
+        <SkeletonLoader v-if="loadingFlota" variant="cards" :rows="4" label="Cargando flota…" />
 
         <div v-else-if="miFlota.length === 0" class="text-center py-16">
           <div class="inline-flex items-center justify-center w-20 h-20 bg-gradient-to-r from-gray-100 to-gray-200 rounded-full mb-6">
@@ -938,6 +920,7 @@ import { excelService } from '@/services/excelService';
 import { pdfService } from '@/services/pdfService';
 import { obtenerMiFlota, obtenerMisSolicitudes, obtenerSolicitudesMiRegion, crearMiSolicitud, actualizarLineaFlota } from '@/services/usuarioService';
 import Pagination from '@/components/Pagination.vue';
+import SkeletonLoader from '@/components/SkeletonLoader.vue';
 import PdfThumbnail from '@/components/PdfThumbnail.vue';
 
 // Funciones helper para formatear enums
@@ -984,7 +967,9 @@ const activeTab = ref('solicitudes'); // 'solicitudes' | 'mi-flota'
 // Estado
 const misSolicitudes = ref([]);
 const loading = ref(false);
-const loadingSolicitudes = ref(false);
+// Arranca en true: se carga en onMounted, así el primer frame ya muestra el
+// skeleton en vez del estado vacío. (loadingFlota no: esa pestaña carga on-demand.)
+const loadingSolicitudes = ref(true);
 const loadingFlota = ref(false);
 const descargandoDenuncia = ref(false);
 const miFlota = ref([]);
@@ -1317,25 +1302,9 @@ const cargarMisSolicitudes = async () => {
       userRegion = miFlota.value[0].region;
     }
     
-    // Método 2: Desde el token de autenticación (decodificar Basic auth)
+    // Método 2: Desde la sesión (el backend devuelve la región en el login/me)
     if (!userRegion) {
-      const authHeader = authService.getAuthHeader();
-      if (authHeader?.startsWith('Basic ')) {
-        const base64 = authHeader.substring(6);
-        const decoded = atob(base64);
-        const username = decoded.split(':')[0];
-        // Mapear username a región
-        const regionMap = {
-          'norte': 'NORTE',
-          'este': 'ESTE', 
-          'sur': 'SUR',
-          'oeste': 'OESTE',
-          'laplata': 'LA_PLATA',
-          'nafa': 'NAFA'
-          
-        };
-        userRegion = regionMap[username.toLowerCase()];
-      }
+      userRegion = authService.getCurrentUser()?.region || null;
     }
     
     // Filtrar solicitudes por región si tenemos la región

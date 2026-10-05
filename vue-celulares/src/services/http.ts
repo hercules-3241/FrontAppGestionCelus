@@ -4,20 +4,20 @@ import router from '@/router';
 
 // Axios compartido para toda la app
 export const http = axios.create({
-  // Usamos el proxy de Vite: /api -> http://localhost:8082
+  // Usamos el proxy de Vite: /api -> http://localhost:8094
   timeout: 15000,
   headers: {
     'Content-Type': 'application/json',
   },
 });
 
-// Interceptor: agrega Authorization: Basic <token> si existe en localStorage
+// Interceptor: agrega Authorization: Bearer <token> si existe en localStorage
 http.interceptors.request.use(
   (config) => {
-    const token = localStorage.getItem('auth');
+    const token = localStorage.getItem('token');
     if (token) {
       config.headers = config.headers || {};
-      (config.headers as any).Authorization = `Basic ${token}`;
+      (config.headers as any).Authorization = `Bearer ${token}`;
     }
     return config;
   },

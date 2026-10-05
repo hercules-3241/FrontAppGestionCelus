@@ -1,16 +1,29 @@
-// Sin validación remota en login; el backend validará en cada request
+// Autenticación por JWT: login contra /api/auth/login y sesión vía /api/auth/me
 import { ref } from 'vue';
 
 export interface User {
   username: string;
   name?: string;
   role?: 'ADMIN' | 'USUARIO';
+  region?: string;
 }
+
+// Estructura que devuelve el backend en /api/auth/login y /api/auth/me
+interface AuthResponse {
+  token: string | null;
+  tokenType?: string;
+  username: string;
+  rol: 'ADMIN' | 'USUARIO';
+  region?: string;
+}
+
+const TOKEN_KEY = 'token';
+const USER_KEY = 'user';
 
 // Estado reactivo para la autenticación
 const currentUser = ref<User | null>(null);
 const authToken = ref<string | null>(null);
-const isInitializing = ref<boolean>(true); // Nuevo estado para manejar la carga inicial
+const isInitializing = ref<boolean>(true); // Maneja la carga inicial
 
 class AuthService {
   constructor() {
@@ -34,41 +47,43 @@ class AuthService {
     }
   }
 
+  private mapUser(data: AuthResponse): User {
+    return {
+      username: data.username,
+      name: data.username,
+      role: data.rol,
+      region: data.region,
+    };
+  }
+
   private async checkExistingSession(): Promise<void> {
-    const savedUser = localStorage.getItem('user');
-    const savedAuth = localStorage.getItem('auth');
-    
-    if (!savedUser || !savedAuth) {
+    const savedToken = localStorage.getItem(TOKEN_KEY);
+
+    if (!savedToken) {
       console.log('📭 No hay sesión guardada');
       return;
     }
 
-    try {
-      console.log('🔍 Verificando sesión existente...');
-      
-      // Parsear datos guardados
-      const userData = JSON.parse(savedUser);
-      authToken.value = savedAuth;
+    authToken.value = savedToken;
 
-      // Verificar si la sesión sigue siendo válida con el backend
-      const testResponse = await fetch('/api/solicitudes', {
+    try {
+      console.log('🔍 Recuperando sesión con /api/auth/me...');
+      const response = await fetch('/api/auth/me', {
         method: 'GET',
-        headers: { 
-          'Authorization': `Basic ${savedAuth}`,
-          'Content-Type': 'application/json'
+        headers: {
+          'Authorization': `Bearer ${savedToken}`,
+          'Content-Type': 'application/json',
         },
-        signal: AbortSignal.timeout(5000) // Timeout de 5 segundos
+        signal: AbortSignal.timeout(5000), // Timeout de 5 segundos
       });
-      
-      if (testResponse.ok) {
-        console.log('✅ Sesión válida encontrada');
-        currentUser.value = userData;
-        
-        // Verificar permisos de admin si es necesario
-        if (!userData.role || userData.role === 'USUARIO') {
-          await this.determineUserRole(savedAuth);
-        }
+
+      if (response.ok) {
+        const data: AuthResponse = await response.json();
+        currentUser.value = this.mapUser(data);
+        localStorage.setItem(USER_KEY, JSON.stringify(currentUser.value));
+        console.log('✅ Sesión recuperada:', currentUser.value);
       } else {
+        // 401 = token vencido/ausente
         console.log('❌ Sesión expirada o inválida');
         this.logout();
       }
@@ -78,116 +93,40 @@ class AuthService {
     }
   }
 
-  private async determineUserRole(authToken: string): Promise<void> {
-    try {
-      const adminTestResponse = await fetch('/api/usuarios', {
-        method: 'GET',
-        headers: { 
-          'Authorization': `Basic ${authToken}`,
-          'Content-Type': 'application/json'
-        },
-        signal: AbortSignal.timeout(3000)
-      });
-      
-      if (adminTestResponse.ok || adminTestResponse.status === 200) {
-        if (currentUser.value) {
-          currentUser.value.role = 'ADMIN';
-          localStorage.setItem('user', JSON.stringify(currentUser.value));
-          console.log('✅ Permisos de admin confirmados');
-        }
-      } else if (adminTestResponse.status === 500) {
-        // Error del servidor - verificar por nombre de usuario
-        console.warn('⚠️ Error 500 en /api/usuarios');
-        if (currentUser.value && currentUser.value.username.toLowerCase() === 'admin') {
-          currentUser.value.role = 'ADMIN';
-          localStorage.setItem('user', JSON.stringify(currentUser.value));
-          console.log('✅ Usuario "admin" - asignando permisos de administrador');
-        }
-      }
-    } catch (error) {
-      console.log('ℹ️ Error verificando permisos admin:', error);
-      // Si el usuario es 'admin', asumir permisos
-      if (currentUser.value && currentUser.value.username.toLowerCase() === 'admin') {
-        currentUser.value.role = 'ADMIN';
-        localStorage.setItem('user', JSON.stringify(currentUser.value));
-        console.log('✅ Usuario "admin" - asignando permisos de administrador por defecto');
-      }
-    }
-  }
-
   async login(username: string, password: string): Promise<boolean> {
     console.log('🔐 Iniciando proceso de login...');
-    const encoded = btoa(`${username}:${password}`);
-    authToken.value = encoded;
-    localStorage.setItem('auth', encoded);
-    
+
     try {
-      // Intentar obtener información del usuario realizando una request que requiera autenticación
-      console.log('🔍 Verificando credenciales con el servidor...');
-      const testResponse = await fetch('/api/solicitudes', {
-        method: 'GET',
-        headers: { 
-          'Authorization': `Basic ${encoded}`,
-          'Content-Type': 'application/json'
-        },
-        signal: AbortSignal.timeout(10000) // Timeout de 10 segundos para login
+      const response = await fetch('/api/auth/login', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ username, password }),
+        signal: AbortSignal.timeout(10000), // Timeout de 10 segundos para login
       });
-      
-      if (testResponse.ok) {
-        console.log('✅ Credenciales válidas');
-        
-        // Determinar rol basado en si puede acceder a recursos admin
-        let role: 'ADMIN' | 'USUARIO' = 'USUARIO';
-        
-        try {
-          console.log('🔍 Determinando permisos de usuario...');
-          const adminTestResponse = await fetch('/api/usuarios', {
-            method: 'GET',
-            headers: { 
-              'Authorization': `Basic ${encoded}`,
-              'Content-Type': 'application/json'
-            },
-            signal: AbortSignal.timeout(5000)
-          });
-          
-          if (adminTestResponse.ok || adminTestResponse.status === 200) {
-            role = 'ADMIN';
-            console.log('✅ Permisos de administrador confirmados');
-          } else if (adminTestResponse.status === 500) {
-            // Error del servidor - asumir que es admin si el usuario es 'admin'
-            console.warn('⚠️ Error 500 en /api/usuarios - asumiendo permisos por nombre de usuario');
-            if (username.toLowerCase() === 'admin') {
-              role = 'ADMIN';
-              console.log('✅ Usuario "admin" - asignando permisos de administrador');
-            }
-          } else if (adminTestResponse.status === 403 || adminTestResponse.status === 401) {
-            console.log('ℹ️ Sin permisos de administrador (403/401)');
-          } else {
-            console.log(`ℹ️ Usuario con permisos estándar (status: ${adminTestResponse.status})`);
-          }
-        } catch (adminError) {
-          console.log('ℹ️ Error verificando permisos admin:', adminError);
-          // Si el usuario es 'admin' y hay error de red/timeout, asumir admin
-          if (username.toLowerCase() === 'admin') {
-            role = 'ADMIN';
-            console.log('✅ Usuario "admin" - asignando permisos de administrador por defecto');
-          }
-        }
-        
-        currentUser.value = { 
-          username, 
-          name: username,
-          role 
-        };
-        
-        localStorage.setItem('user', JSON.stringify(currentUser.value));
-        console.log('✅ Login exitoso:', currentUser.value);
-        return true;
-      } else {
-        console.log('❌ Credenciales inválidas');
+
+      if (!response.ok) {
+        // 401 = credenciales inválidas, 400 = validación
+        console.log(`❌ Login rechazado (status: ${response.status})`);
         this.logout();
         return false;
       }
+
+      const data: AuthResponse = await response.json();
+
+      if (!data.token) {
+        console.log('❌ Respuesta de login sin token');
+        this.logout();
+        return false;
+      }
+
+      authToken.value = data.token;
+      localStorage.setItem(TOKEN_KEY, data.token);
+
+      currentUser.value = this.mapUser(data);
+      localStorage.setItem(USER_KEY, JSON.stringify(currentUser.value));
+
+      console.log('✅ Login exitoso:', currentUser.value);
+      return true;
     } catch (error) {
       console.error('❌ Error en login:', error);
       this.logout();
@@ -198,12 +137,12 @@ class AuthService {
   logout(): void {
     currentUser.value = null;
     authToken.value = null;
-    localStorage.removeItem('auth');
-    localStorage.removeItem('user');
+    localStorage.removeItem(TOKEN_KEY);
+    localStorage.removeItem(USER_KEY);
   }
 
   isAuthenticated(): boolean {
-    return !!authToken.value && !!localStorage.getItem('auth');
+    return !!(authToken.value || localStorage.getItem(TOKEN_KEY));
   }
 
   isInitializing(): boolean {
@@ -217,7 +156,7 @@ class AuthService {
         resolve();
         return;
       }
-      
+
       const checkInterval = setInterval(() => {
         if (!isInitializing.value) {
           clearInterval(checkInterval);
@@ -231,12 +170,15 @@ class AuthService {
     return currentUser.value;
   }
 
-  getAuthHeader(): string | null {
-    const token = authToken.value || localStorage.getItem('auth');
-    return token ? `Basic ${token}` : null;
+  getToken(): string | null {
+    return authToken.value || localStorage.getItem(TOKEN_KEY);
   }
 
-  // Dev-only: simple admin check. Adjust when backend provides roles.
+  getAuthHeader(): string | null {
+    const token = this.getToken();
+    return token ? `Bearer ${token}` : null;
+  }
+
   isAdmin(): boolean {
     return currentUser.value?.role === 'ADMIN';
   }

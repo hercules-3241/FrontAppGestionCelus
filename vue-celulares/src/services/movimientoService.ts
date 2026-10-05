@@ -42,7 +42,12 @@ export const movimientoService = {
   },
   
   // Obtener todos los movimientos
-  obtenerTodos: () => api.get<MovimientoDetalle[]>('/api/movimientos'),
+  obtenerTodos: () => api.get<MovimientoDetalle[]>('/api/movimientos', {
+    params: {
+      page: 0,
+      size: 10000 // Solicitar un número muy grande para obtener todos los registros
+    }
+  }),
   
   // Obtener movimiento por ID
   obtenerPorId: (id: number) => api.get<MovimientoDetalle>(`/api/movimientos/${id}`),

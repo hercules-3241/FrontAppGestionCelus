@@ -1,575 +1,271 @@
 <template>
-  <div class="min-h-screen bg-gradient-to-br from-blue-50 via-indigo-50 to-purple-50 p-4">
-    <!-- Header -->
-    <div class="mb-6 lg:mb-8">
-      <h1 class="text-2xl sm:text-4xl lg:text-5xl font-bold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">
-        📊 Estadísticas y Análisis
-      </h1>
-      <p class="text-gray-600 mt-2 text-sm sm:text-base">Panel de control y análisis regional de solicitudes</p>
-    </div>
+  <div class="min-h-screen bg-slate-50">
+    <!-- ===== Hero con gradiente ===== -->
+    <div class="px-3 sm:px-4 lg:px-6 pt-3 sm:pt-4">
+      <div class="relative overflow-hidden rounded-[1.75rem] bg-gradient-to-br from-violet-600 via-purple-600 to-fuchsia-600 shadow-xl shadow-purple-500/20 px-5 sm:px-8 pt-6 pb-20">
+        <div class="pointer-events-none absolute -top-16 -right-10 h-56 w-56 rounded-full bg-white/10"></div>
+        <div class="pointer-events-none absolute -bottom-24 -left-16 h-64 w-64 rounded-full bg-white/5"></div>
 
-      <!-- Selector de región -->
-      <div class="bg-white/70 backdrop-blur-xl rounded-3xl shadow-2xl border border-white/20 p-6 mb-8">
-        <div class="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+        <div class="relative mx-auto max-w-7xl flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
           <div>
-            <h2 class="text-xl font-bold text-gray-900 mb-2">Filtros de Análisis</h2>
-            <p class="text-gray-600">Selecciona una región específica o visualiza todas</p>
+            <h1 class="text-2xl sm:text-3xl lg:text-4xl font-bold text-white leading-tight">Estadísticas y Análisis</h1>
+            <p class="mt-1 text-white/80 text-sm sm:text-base">Panel de control y análisis regional de solicitudes</p>
           </div>
-          <div class="flex items-center gap-4">
-            <select v-model="regionSeleccionada" 
-                    @change="cargarDatosPorRegion"
-                    class="bg-white/90 backdrop-blur-sm border border-gray-200/50 rounded-xl px-4 py-3 focus:ring-2 focus:ring-slate-500/20 focus:border-slate-500 transition-all duration-200">
-              <option value="">Todas las regiones</option>
-              <option value="COMERCIAL">Comercial (Agrupado)</option>
-              <option value="NORTE">Norte</option>
-              <option value="SUR">Sur</option>
-              <option value="ESTE">Este</option>
-              <option value="OESTE">Oeste</option>
-              <option value="LA_PLATA">La Plata</option>
-              <option value="NAFA">NAFA</option>
-            </select>
-            <button @click="cargarTodosDatos" 
-                    class="bg-gradient-to-r from-slate-600 to-gray-700 text-white px-6 py-3 rounded-xl font-semibold shadow-lg hover:shadow-xl transform hover:scale-105 transition-all duration-200">
-              <svg class="w-5 h-5 inline mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path>
-              </svg>
-              Actualizar
-            </button>
-          </div>
-        </div>
-      </div>
-
-      <!-- Mensaje de éxito -->
-      <div v-if="mensajeExito" class="bg-gradient-to-r from-green-500 to-emerald-600 text-white rounded-3xl p-6 mb-8 shadow-2xl">
-        <div class="flex items-center gap-3">
-          <div class="p-2 bg-white/20 rounded-xl">
-            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
-            </svg>
-          </div>
-          <div>
-            <h3 class="font-bold text-lg">¡Exportación Exitosa!</h3>
-            <p class="opacity-90">{{ mensajeExito }}</p>
-          </div>
-        </div>
-      </div>
-
-      <!-- Mensaje de error -->
-      <div v-if="error" class="bg-gradient-to-r from-red-500 to-pink-600 text-white rounded-3xl p-6 mb-8 shadow-2xl">
-        <div class="flex items-center gap-3">
-          <div class="p-2 bg-white/20 rounded-xl">
-            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
-            </svg>
-          </div>
-          <div>
-            <h3 class="font-bold text-lg">Error de Conexión</h3>
-            <p class="opacity-90">{{ error }}</p>
-          </div>
-          <button @click="cargarTodosDatos" class="ml-auto p-2 bg-white/20 hover:bg-white/30 rounded-xl transition-colors">
-            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <button @click="cargarTodosDatos" :disabled="cargando"
+                  class="inline-flex items-center gap-2 rounded-xl bg-white px-5 py-2.5 text-sm font-semibold text-violet-700 shadow-lg hover:bg-white/90 transition-colors self-start sm:self-auto disabled:opacity-60">
+            <svg :class="['w-4 h-4', cargando && 'animate-spin']" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path>
             </svg>
+            {{ cargando ? 'Actualizando...' : 'Actualizar' }}
           </button>
         </div>
       </div>
+    </div>
 
-      <!-- Cards de resumen por región -->
-      <div v-if="!regionSeleccionada && estadisticasRegiones.length > 0" class="mb-8">
-        <div class="bg-white/70 backdrop-blur-xl rounded-3xl shadow-2xl border border-white/20 p-6 mb-6">
-          <div class="flex items-center gap-3 mb-4">
-            <div class="p-3 bg-gradient-to-br from-red-500 to-pink-600 rounded-2xl">
-              <svg class="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L3.082 16.5c-.77.833.192 2.5 1.732 2.5z"></path>
-              </svg>
-            </div>
-            <h2 class="text-2xl font-bold bg-gradient-to-r from-gray-900 to-gray-700 bg-clip-text text-transparent">Alertas Críticas - Solicitudes por Rotura</h2>
+    <!-- ===== Contenido (se solapa con el hero) ===== -->
+    <div class="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 -mt-12 relative z-10 pb-10 space-y-6">
+
+      <!-- KPIs -->
+      <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+        <div v-for="k in kpis" :key="k.label" class="bg-white rounded-2xl border border-slate-200/70 shadow-sm p-5 flex items-center gap-4">
+          <div :class="['flex h-12 w-12 flex-shrink-0 items-center justify-center rounded-xl text-white shadow-md', k.chip]">
+            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" :d="k.icon" />
+            </svg>
           </div>
-          <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-            <div v-for="region in regionesUrgentes" 
-                 :key="region.region" 
-                 class="bg-gradient-to-r from-red-500 to-pink-600 rounded-2xl p-4 text-white shadow-lg transform hover:scale-105 transition-all duration-200">
-              <div class="flex items-center justify-between mb-2">
-                <h3 class="font-bold text-lg">{{ region.region.replace('_', ' ') }}</h3>
-                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L3.082 16.5c-.77.833.192 2.5 1.732 2.5z"></path>
-                </svg>
-              </div>
-              <div class="text-2xl font-bold mb-1">{{ region.solicitudesPorRotura }}</div>
-              <div class="text-sm opacity-90">Solicitudes por rotura</div>
-              <div class="text-xs opacity-75 mt-1">{{ ((region.solicitudesPorRotura / region.totalSolicitudes) * 100).toFixed(1) }}% del total</div>
-            </div>
-          </div>
-        </div>
-
-        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          <div v-for="region in estadisticasRegiones" 
-               :key="region.region" 
-               class="bg-white/70 backdrop-blur-xl rounded-3xl shadow-2xl border border-white/20 p-6 hover:shadow-3xl transition-all duration-300">
-            <div class="flex items-center justify-between mb-4">
-              <h3 class="text-xl font-bold text-gray-900">{{ region.region.replace('_', ' ') }}</h3>
-              <div v-if="region.urgente" class="p-2 bg-red-100 rounded-full">
-                <svg class="w-5 h-5 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L3.082 16.5c-.77.833.192 2.5 1.732 2.5z"></path>
-                </svg>
-              </div>
-            </div>
-            
-            <!-- Total de solicitudes -->
-            <div class="text-center mb-6">
-              <div class="text-3xl font-bold text-gray-900 mb-2">{{ region.totalSolicitudes }}</div>
-              <div class="text-sm text-gray-600">Total de Solicitudes</div>
-            </div>
-
-            <!-- Estados de solicitudes -->
-            <div class="space-y-3 mb-6">
-              <div class="flex items-center justify-between">
-                <span class="text-sm font-medium text-gray-600">Pendientes</span>
-                <div class="flex items-center gap-2">
-                  <div class="w-16 h-2 bg-gray-200 rounded-full overflow-hidden">
-                    <div class="h-full bg-gradient-to-r from-yellow-400 to-orange-500" 
-                         :style="{ width: `${(region.solicitudesPendientes / region.totalSolicitudes) * 100}%` }"></div>
-                  </div>
-                  <span class="text-sm font-bold text-gray-900">{{ region.solicitudesPendientes }}</span>
-                </div>
-              </div>
-              
-              <div class="flex items-center justify-between">
-                <span class="text-sm font-medium text-gray-600">En Proceso</span>
-                <div class="flex items-center gap-2">
-                  <div class="w-16 h-2 bg-gray-200 rounded-full overflow-hidden">
-                    <div class="h-full bg-gradient-to-r from-blue-400 to-indigo-500" 
-                         :style="{ width: `${(region.solicitudesEnProceso / region.totalSolicitudes) * 100}%` }"></div>
-                  </div>
-                  <span class="text-sm font-bold text-gray-900">{{ region.solicitudesEnProceso }}</span>
-                </div>
-              </div>
-              
-              <div class="flex items-center justify-between">
-                <span class="text-sm font-medium text-gray-600">Resueltas</span>
-                <div class="flex items-center gap-2">
-                  <div class="w-16 h-2 bg-gray-200 rounded-full overflow-hidden">
-                    <div class="h-full bg-gradient-to-r from-green-400 to-emerald-500" 
-                         :style="{ width: `${(region.solicitudesResueltas / region.totalSolicitudes) * 100}%` }"></div>
-                  </div>
-                  <span class="text-sm font-bold text-gray-900">{{ region.solicitudesResueltas }}</span>
-                </div>
-              </div>
-              
-              <div class="flex items-center justify-between">
-                <span class="text-sm font-medium text-gray-600">Por Rotura</span>
-                <div class="flex items-center gap-2">
-                  <div class="w-16 h-2 bg-gray-200 rounded-full overflow-hidden">
-                    <div class="h-full bg-gradient-to-r from-red-400 to-pink-500" 
-                         :style="{ width: `${(region.solicitudesPorRotura / region.totalSolicitudes) * 100}%` }"></div>
-                  </div>
-                  <span class="text-sm font-bold text-gray-900">{{ region.solicitudesPorRotura }}</span>
-                </div>
-              </div>
-            </div>
-
-            <!-- Botón para ver detalles -->
-            <button @click="verDetalleRegion(region.region)" 
-                    class="w-full bg-gradient-to-r from-slate-600 to-gray-700 text-white py-2 px-4 rounded-xl font-semibold text-sm shadow-lg hover:shadow-xl transform hover:scale-105 transition-all duration-200">
-              Ver Detalle
-            </button>
-          </div>
-        </div>
-      </div>
-      <!-- Cards de resumen generales -->
-      <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
-        <!-- Card Total Movimientos -->
-        <div class="bg-white/70 backdrop-blur-xl rounded-3xl shadow-2xl border border-white/20 p-6 hover:shadow-3xl transition-all duration-300">
-          <div class="flex items-center">
-            <div class="flex-shrink-0">
-              <div class="w-12 h-12 bg-gradient-to-br from-blue-500 to-indigo-600 rounded-2xl flex items-center justify-center">
-                <svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"></path>
-                </svg>
-              </div>
-            </div>
-            <div class="ml-4">
-              <p class="text-sm font-semibold text-gray-600 uppercase tracking-wide">Total Movimientos</p>
-              <p class="text-3xl font-bold text-gray-900">{{ estadisticas?.totalMovimientos || 0 }}</p>
-            </div>
-          </div>
-        </div>
-
-        <!-- Card Total Solicitudes -->
-        <div class="bg-white/70 backdrop-blur-xl rounded-3xl shadow-2xl border border-white/20 p-6 hover:shadow-3xl transition-all duration-300">
-          <div class="flex items-center">
-            <div class="flex-shrink-0">
-              <div class="w-12 h-12 bg-gradient-to-br from-green-500 to-emerald-600 rounded-2xl flex items-center justify-center">
-                <svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
-                </svg>
-              </div>
-            </div>
-            <div class="ml-4">
-              <p class="text-sm font-semibold text-gray-600 uppercase tracking-wide">Total Solicitudes</p>
-              <p class="text-3xl font-bold text-gray-900">{{ estadisticas?.totalSolicitudes || 0 }}</p>
-            </div>
-          </div>
-        </div>
-
-        <!-- Card Movimientos Este Mes -->
-        <div class="bg-white/70 backdrop-blur-xl rounded-3xl shadow-2xl border border-white/20 p-6 hover:shadow-3xl transition-all duration-300">
-          <div class="flex items-center">
-            <div class="flex-shrink-0">
-              <div class="w-12 h-12 bg-gradient-to-br from-purple-500 to-pink-600 rounded-2xl flex items-center justify-center">
-                <svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"></path>
-                </svg>
-              </div>
-            </div>
-            <div class="ml-4">
-              <p class="text-sm font-semibold text-gray-600 uppercase tracking-wide">Mov. Este Mes</p>
-              <p class="text-3xl font-bold text-gray-900">{{ estadisticas?.movimientosMesActual || 0 }}</p>
-            </div>
-          </div>
-        </div>
-
-        <!-- Card Solicitudes Este Mes -->
-        <div class="bg-white/70 backdrop-blur-xl rounded-3xl shadow-2xl border border-white/20 p-6 hover:shadow-3xl transition-all duration-300">
-          <div class="flex items-center">
-            <div class="flex-shrink-0">
-              <div class="w-12 h-12 bg-gradient-to-br from-orange-500 to-red-600 rounded-2xl flex items-center justify-center">
-                <svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v6a2 2 0 002 2h2m0-8v8m0 0v8m0-8h8m-8 0V3"></path>
-                </svg>
-              </div>
-            </div>
-            <div class="ml-4">
-              <p class="text-sm font-semibold text-gray-600 uppercase tracking-wide">Sol. Este Mes</p>
-              <p class="text-3xl font-bold text-gray-900">{{ estadisticas?.solicitudesMesActual || 0 }}</p>
-            </div>
+          <div class="min-w-0">
+            <p class="text-xs font-semibold text-slate-500 uppercase tracking-wider truncate">{{ k.label }}</p>
+            <p class="text-2xl sm:text-3xl font-bold text-slate-900 tabular-nums leading-tight">{{ k.value }}</p>
           </div>
         </div>
       </div>
 
-      <!-- Gráficos modernos -->
-      <div class="grid grid-cols-1 lg:grid-cols-2 gap-8 mb-8">
-        <!-- Gráfico de líneas -->
-        <div class="bg-white/70 backdrop-blur-xl rounded-3xl shadow-2xl border border-white/20 p-8">
-          <div class="flex items-center gap-3 mb-6">
-            <div class="p-3 bg-gradient-to-br from-blue-500 to-indigo-600 rounded-2xl">
-              <svg class="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 12l3-3 3 3 4-4M8 21l4-4 4 4M3 4h18M4 4h16v12a1 1 0 01-1 1H5a1 1 0 01-1-1V4z"></path>
-              </svg>
+      <!-- Mensajes -->
+      <div v-if="mensajeExito" class="flex items-center gap-3 rounded-xl border border-emerald-200 bg-emerald-50 px-4 py-3 text-emerald-800">
+        <svg class="w-5 h-5 text-emerald-600 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
+        </svg>
+        <span class="text-sm font-medium">{{ mensajeExito }}</span>
+      </div>
+
+      <div v-if="error" class="flex items-center gap-3 rounded-xl border border-rose-200 bg-rose-50 px-4 py-3 text-rose-800">
+        <svg class="w-5 h-5 text-rose-600 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+        </svg>
+        <span class="text-sm font-medium flex-1">{{ error }}</span>
+        <button @click="cargarTodosDatos" class="text-xs font-semibold text-rose-700 hover:text-rose-900">Reintentar</button>
+      </div>
+
+      <!-- Tendencia mensual + Ranking de regiones -->
+      <div class="grid grid-cols-1 lg:grid-cols-5 gap-6 items-stretch">
+        <!-- Tendencia mensual (card oscura) -->
+        <div class="lg:col-span-3 relative overflow-hidden rounded-2xl bg-gradient-to-br from-slate-900 via-slate-900 to-[#1a1030] p-6 text-white shadow-lg">
+          <div class="pointer-events-none absolute -top-16 -right-10 h-52 w-52 rounded-full bg-fuchsia-500/20 blur-3xl"></div>
+          <div class="pointer-events-none absolute -bottom-20 -left-12 h-52 w-52 rounded-full bg-violet-600/15 blur-3xl"></div>
+
+          <div class="relative flex items-start justify-between mb-5">
+            <div>
+              <h3 class="text-xs font-semibold uppercase tracking-wider text-slate-400">Tendencia mensual</h3>
+              <p class="text-sm text-slate-400 mt-1">Últimos 12 meses · movimientos vs. solicitudes</p>
             </div>
-            <h3 class="text-2xl font-bold bg-gradient-to-r from-gray-900 to-gray-700 bg-clip-text text-transparent">Tendencia Mensual</h3>
+            <div class="flex items-center gap-4 flex-shrink-0">
+              <span class="flex items-center gap-2 text-xs text-slate-300">
+                <span class="h-0.5 w-4 rounded bg-violet-400"></span> Movimientos
+              </span>
+              <span class="flex items-center gap-2 text-xs text-slate-300">
+                <span class="h-0.5 w-4 rounded bg-emerald-400"></span> Solicitudes
+              </span>
+            </div>
           </div>
-          <div class="h-80">
-            <Line
-              v-if="chartData.labels.length > 0"
-              :data="chartData"
-              :options="chartOptions"
-            />
-            <div v-else class="flex items-center justify-center h-full text-gray-500">
-              <div class="text-center">
-                <div class="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
-                <p class="text-lg font-medium">Cargando gráfico...</p>
-              </div>
+
+          <div class="relative h-72">
+            <SkeletonLoader v-if="cargando" variant="chart" chart-height="150px" label="Cargando gráfico…" />
+            <Line v-else-if="chartData.labels.length > 0" :data="chartData" :options="chartOptions" />
+            <div v-else class="flex items-center justify-center h-full text-slate-500 text-sm">
+              Sin datos para mostrar
             </div>
           </div>
         </div>
 
-        <!-- Ranking de Celulares Rotos por Región (existente) -->
-        <div class="bg-white/30 backdrop-blur-lg rounded-3xl shadow-2xl border border-white/20 p-8 mb-8">
-          <div class="flex items-center justify-between mb-6">
-            <div class="flex items-center gap-3">
-              <div class="p-3 bg-gradient-to-br from-red-500 to-orange-600 rounded-2xl">
-                <svg class="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L4.082 16.5c-.77.833.192 2.5 1.732 2.5z"/>
-                </svg>
-              </div>
-              <h3 class="text-2xl font-bold bg-gradient-to-r from-red-600 to-orange-600 bg-clip-text text-transparent">
-                🚨 Ranking de Regiones por Celulares Rotos
-              </h3>
-            </div>
-          </div>
-          
-          <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            <div 
-              v-for="(region, index) in rankingCelularesRotos" 
-              :key="region.region"
-              class="bg-white/40 backdrop-blur-sm rounded-2xl p-6 border border-white/30 hover:shadow-lg transition-all duration-300"
-              :class="{
-                'border-red-300 bg-red-50/50': index === 0,
-                'border-orange-300 bg-orange-50/50': index === 1,
-                'border-yellow-300 bg-yellow-50/50': index === 2
-              }"
-            >
-              <div class="flex items-center justify-between mb-4">
-                <div class="flex items-center space-x-3">
-                  <div 
-                    class="w-8 h-8 rounded-full flex items-center justify-center text-white font-bold text-sm"
-                    :class="{
-                      'bg-red-500': index === 0,
-                      'bg-orange-500': index === 1,
-                      'bg-yellow-500': index === 2,
-                      'bg-gray-400': index > 2
-                    }"
-                  >
-                    {{ index + 1 }}
-                  </div>
-                  <h4 class="font-semibold text-gray-800">{{ region.region.replace('_', ' ') }}</h4>
-                </div>
-                <div 
-                  v-if="region.urgente" 
-                  class="px-2 py-1 bg-red-100 text-red-700 text-xs font-medium rounded-full"
-                >
-                  ⚠️ URGENTE
-                </div>
-              </div>
-              
-              <div class="space-y-3">
-                <div class="flex justify-between items-center">
-                  <span class="text-sm text-gray-600">Total Usuarios:</span>
-                  <span class="font-semibold text-gray-800">{{ region.totalUsuarios }}</span>
-                </div>
-                <div class="flex justify-between items-center">
-                  <span class="text-sm text-gray-600">Celulares Rotos:</span>
-                  <span class="font-bold text-red-600">{{ region.totalCelularesRotos || 0 }}</span>
-                </div>
-                <div class="flex justify-between items-center">
-                  <span class="text-sm text-gray-600">Promedio por Usuario:</span>
-                  <span class="font-semibold text-orange-600">{{ region.promedioCelularesRotos.toFixed(2) }}</span>
-                </div>
-                <div class="w-full bg-gray-200 rounded-full h-2 mt-3">
-                  <div 
-                    class="h-2 rounded-full transition-all duration-500"
-                    :class="{
-                      'bg-red-500': region.promedioCelularesRotos > 0.5,
-                      'bg-orange-500': region.promedioCelularesRotos > 0.3 && region.promedioCelularesRotos <= 0.5,
-                      'bg-green-500': region.promedioCelularesRotos <= 0.3
-                    }"
-                    :style="{ width: Math.min(region.promedioCelularesRotos * 100, 100) + '%' }"
-                  ></div>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        <!-- Gráfico de barras por región -->
-        <div class="bg-white/70 backdrop-blur-xl rounded-3xl shadow-2xl border border-white/20 p-8">
-          <div class="flex items-center gap-3 mb-6">
-            <div class="p-3 bg-gradient-to-br from-green-500 to-emerald-600 rounded-2xl">
-              <svg class="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"></path>
+        <!-- Ranking de regiones -->
+        <div class="lg:col-span-2 bg-white rounded-2xl border border-slate-200/70 shadow-sm p-6">
+          <div class="flex items-center gap-3 mb-1">
+            <div class="flex h-9 w-9 items-center justify-center rounded-lg bg-rose-50 text-rose-600">
+              <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L4.082 16.5c-.77.833.192 2.5 1.732 2.5z" />
               </svg>
             </div>
-            <h3 class="text-2xl font-bold bg-gradient-to-r from-gray-900 to-gray-700 bg-clip-text text-transparent">Estados por Región</h3>
+            <h3 class="text-base font-bold text-slate-900">Ranking de regiones</h3>
           </div>
-          <div class="h-80">
-            <Bar
-              v-if="regionesChartData.labels.length > 0"
-              :data="regionesChartData"
-              :options="barChartOptions"
-            />
-            <div v-else class="flex items-center justify-center h-full text-gray-500">
-              <div class="text-center">
-                <div class="animate-spin rounded-full h-12 w-12 border-b-2 border-green-600 mx-auto mb-4"></div>
-                <p class="text-lg font-medium">Cargando gráfico...</p>
+          <p class="text-sm text-slate-500 mb-4 ml-12">Celulares rotos · promedio por usuario</p>
+
+          <SkeletonLoader v-if="cargando" variant="list" :rows="5" label="Cargando ranking…" />
+          <div v-else-if="rankingCelularesRotos.length === 0" class="py-10 text-center text-sm text-slate-400">
+            Sin datos de regiones
+          </div>
+          <div v-else class="divide-y divide-slate-100">
+            <div v-for="(region, index) in rankingCelularesRotos" :key="region.region" class="flex items-center gap-3 py-3">
+              <span :class="['flex h-7 w-7 flex-shrink-0 items-center justify-center rounded-lg text-xs font-bold', rankClass(index)]">
+                {{ index + 1 }}
+              </span>
+              <div class="min-w-0 flex-1">
+                <div class="font-semibold text-slate-900 text-sm truncate">{{ region.region.replace(/_/g, ' ') }}</div>
+                <div class="text-xs text-slate-500">{{ region.totalUsuarios }} usuarios · {{ region.totalCelularesRotos }} rotos</div>
+              </div>
+              <div class="text-right flex-shrink-0">
+                <div class="text-base font-bold text-slate-900 tabular-nums leading-none">{{ region.promedioCelularesRotos.toFixed(2) }}</div>
+                <div class="text-[10px] text-slate-400 mt-0.5">prom/usr</div>
               </div>
             </div>
           </div>
         </div>
       </div>
 
-      <!-- Botones de exportación modernos -->
-      <div class="bg-white/70 backdrop-blur-xl rounded-3xl shadow-2xl border border-white/20 p-8 mb-8">
-        <div class="flex items-center gap-3 mb-6">
-          <div class="p-3 bg-gradient-to-br from-purple-500 to-pink-600 rounded-2xl">
-            <svg class="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+      <!-- Solicitudes por región -->
+      <div class="bg-white rounded-2xl border border-slate-200/70 shadow-sm p-6">
+        <div class="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4 mb-5">
+          <div class="flex items-baseline gap-3">
+            <h3 class="text-lg font-bold text-slate-900">Solicitudes por región</h3>
+            <span class="text-sm text-slate-400">composición por estado</span>
+          </div>
+          <div class="flex flex-wrap items-center gap-4">
+            <div class="flex items-center gap-3 text-xs">
+              <span class="flex items-center gap-1.5 text-slate-600"><span class="h-2.5 w-2.5 rounded-sm bg-amber-500"></span>Pendientes</span>
+              <span class="flex items-center gap-1.5 text-slate-600"><span class="h-2.5 w-2.5 rounded-sm bg-indigo-500"></span>En proceso</span>
+              <span class="flex items-center gap-1.5 text-slate-600"><span class="h-2.5 w-2.5 rounded-sm bg-emerald-500"></span>Resueltas</span>
+              <span class="flex items-center gap-1.5 text-slate-600"><span class="h-2.5 w-2.5 rounded-sm bg-rose-500"></span>Por rotura</span>
+            </div>
+            <div class="w-52">
+              <CustomSelect
+                :model-value="regionSeleccionada"
+                @update:model-value="(v: any) => { regionSeleccionada = v; cargarDatosPorRegion(); }"
+                :options="regionOptions"
+                placeholder="Todas las regiones" />
+            </div>
+          </div>
+        </div>
+
+        <SkeletonLoader v-if="cargando" variant="list" :rows="6" label="Cargando regiones…" />
+        <div v-else-if="solicitudesPorRegion.length === 0" class="py-10 text-center text-sm text-slate-400">
+          Sin datos de regiones
+        </div>
+        <div v-else class="divide-y divide-slate-100">
+          <div v-for="r in solicitudesPorRegion" :key="r.region" class="py-4 flex flex-col sm:flex-row sm:items-center gap-3">
+            <!-- Región + total -->
+            <div class="sm:w-44 flex-shrink-0">
+              <div class="flex items-center gap-2">
+                <span class="font-bold text-slate-900 text-sm uppercase">{{ r.region.replace(/_/g, ' ') }}</span>
+                <span v-if="r.urgente" class="badge-rose">urgente</span>
+              </div>
+              <div class="text-xs text-slate-400">total de solicitudes</div>
+            </div>
+
+            <div class="text-2xl font-bold text-slate-900 tabular-nums sm:w-16 flex-shrink-0">{{ r.total }}</div>
+
+            <!-- Barra apilada -->
+            <div class="flex-1 min-w-0">
+              <div class="flex h-3 w-full overflow-hidden rounded-full bg-slate-100">
+                <div v-for="s in r.segs" :key="s.key" :class="s.color" :style="{ width: pctOf(s.value, r.total) }"
+                     :title="`${s.label}: ${s.value}`"></div>
+              </div>
+            </div>
+
+            <!-- Números por estado -->
+            <div class="flex items-center gap-3 flex-shrink-0 tabular-nums text-sm font-semibold">
+              <span class="w-6 text-right text-amber-600">{{ r.segs[0].value }}</span>
+              <span class="w-6 text-right text-indigo-600">{{ r.segs[1].value }}</span>
+              <span class="w-6 text-right text-emerald-600">{{ r.segs[2].value }}</span>
+              <span class="w-6 text-right text-rose-600">{{ r.segs[3].value }}</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Exportar datos -->
+      <div class="bg-white rounded-2xl border border-slate-200/70 shadow-sm p-6">
+        <div class="flex items-center gap-3 mb-5">
+          <div class="flex h-10 w-10 items-center justify-center rounded-lg bg-violet-50 text-violet-600">
+            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
             </svg>
           </div>
-          <h2 class="text-2xl font-bold bg-gradient-to-r from-gray-900 to-gray-700 bg-clip-text text-transparent">Exportar Datos</h2>
-        </div>
-        
-        <!-- Filtros de exportación -->
-        <div class="bg-gradient-to-r from-gray-50 to-slate-50 rounded-2xl p-4 mb-6 border border-gray-200">
-          <h3 class="text-lg font-semibold text-gray-800 mb-3 flex items-center gap-2">
-            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2.586a1 1 0 01-.293.707l-6.414 6.414a1 1 0 00-.293.707V17l-4 4v-6.586a1 1 0 00-.293-.707L3.293 7.707A1 1 0 013 7V4z"></path>
-            </svg>
-            Filtros de Exportación
-          </h3>
-          <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
-            <div>
-              <label class="block text-sm font-medium text-gray-700 mb-1">Fecha Desde</label>
-              <input 
-                type="date" 
-                v-model="filtrosExportacion.fechaDesde"
-                class="w-full px-3 py-2 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-              >
-            </div>
-            <div>
-              <label class="block text-sm font-medium text-gray-700 mb-1">Fecha Hasta</label>
-              <input 
-                type="date" 
-                v-model="filtrosExportacion.fechaHasta"
-                class="w-full px-3 py-2 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-              >
-            </div>
-            <div>
-              <label class="block text-sm font-medium text-gray-700 mb-1">Región</label>
-              <select 
-                v-model="filtrosExportacion.region"
-                class="w-full px-3 py-2 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-              >
-                <option value="">Todas las regiones</option>
-                <option value="COMERCIAL">Comercial (Agrupado)</option>
-                <option value="NORTE">Norte</option>
-                <option value="SUR">Sur</option>
-                <option value="ESTE">Este</option>
-                <option value="OESTE">Oeste</option>
-                <option value="LA_PLATA">La Plata</option>
-                <option value="NAFA">NAFA</option>
-              </select>
-            </div>
+          <div>
+            <h3 class="text-base font-bold text-slate-900">Exportar datos</h3>
+            <p class="text-sm text-slate-500">Filtrá el período y elegí qué exportar</p>
           </div>
         </div>
-        
-        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4">
-          <button
-            @click="exportarEstadisticas"
-            class="group relative bg-gradient-to-r from-blue-500 to-indigo-600 text-white px-6 py-4 rounded-2xl font-semibold shadow-xl hover:shadow-2xl transform hover:scale-105 transition-all duration-300 flex items-center gap-3"
-          >
-            <svg class="w-5 h-5 group-hover:rotate-12 transition-transform duration-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"></path>
-            </svg>
-            Estadísticas
-          </button>
-          
-          <button
-            @click="exportarMovimientos"
-            class="group relative bg-gradient-to-r from-green-500 to-emerald-600 text-white px-6 py-4 rounded-2xl font-semibold shadow-xl hover:shadow-2xl transform hover:scale-105 transition-all duration-300 flex items-center gap-3"
-          >
-            <svg class="w-5 h-5 group-hover:rotate-12 transition-transform duration-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"></path>
-            </svg>
-            Movimientos
-          </button>
-          
-          <button
-            @click="exportarSolicitudes"
-            class="group relative bg-gradient-to-r from-purple-500 to-pink-600 text-white px-6 py-4 rounded-2xl font-semibold shadow-xl hover:shadow-2xl transform hover:scale-105 transition-all duration-300 flex items-center gap-3"
-          >
-            <svg class="w-5 h-5 group-hover:rotate-12 transition-transform duration-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
-            </svg>
-            Solicitudes
-          </button>
-          
-          <button
-            @click="exportarRepartosRoturas"
-            class="group relative bg-gradient-to-r from-orange-500 to-red-600 text-white px-6 py-4 rounded-2xl font-semibold shadow-xl hover:shadow-2xl transform hover:scale-105 transition-all duration-300 flex items-center gap-3"
-          >
-            <svg class="w-5 h-5 group-hover:rotate-12 transition-transform duration-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"></path>
-            </svg>
-            Repartos
-          </button>
-          
-          <button
-            @click="exportarCompleto"
-            class="group relative bg-gradient-to-r from-gray-700 to-slate-800 text-white px-6 py-4 rounded-2xl font-semibold shadow-xl hover:shadow-2xl transform hover:scale-105 transition-all duration-300 flex items-center gap-3"
-          >
-            <svg class="w-5 h-5 group-hover:rotate-12 transition-transform duration-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"></path>
-            </svg>
-            Todo
-          </button>
+
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-5">
+          <div>
+            <label class="field-label">Fecha desde</label>
+            <DatePicker :model-value="filtrosExportacion.fechaDesde" @update:model-value="(v: any) => filtrosExportacion.fechaDesde = v" placeholder="Cualquiera" />
+          </div>
+          <div>
+            <label class="field-label">Fecha hasta</label>
+            <DatePicker :model-value="filtrosExportacion.fechaHasta" @update:model-value="(v: any) => filtrosExportacion.fechaHasta = v" placeholder="Cualquiera" />
+          </div>
+          <div>
+            <label class="field-label">Región</label>
+            <CustomSelect :model-value="filtrosExportacion.region" @update:model-value="(v: any) => filtrosExportacion.region = v" :options="regionOptions" placeholder="Todas las regiones" />
+          </div>
+        </div>
+
+        <div class="flex flex-wrap gap-3">
+          <button @click="exportarEstadisticas" class="btn-primary">Estadísticas</button>
+          <button @click="exportarMovimientos" class="btn-success">Movimientos</button>
+          <button @click="exportarSolicitudes"
+                  class="inline-flex items-center justify-center gap-2 rounded-lg px-4 py-2 text-sm font-medium text-white bg-violet-600 hover:bg-violet-700 transition-colors">Solicitudes</button>
+          <button @click="exportarRepartosRoturas"
+                  class="inline-flex items-center justify-center gap-2 rounded-lg px-4 py-2 text-sm font-medium text-white bg-orange-500 hover:bg-orange-600 transition-colors">Repartos</button>
+          <button @click="exportarCompleto"
+                  class="inline-flex items-center justify-center gap-2 rounded-lg px-4 py-2 text-sm font-medium text-white bg-slate-800 hover:bg-slate-900 transition-colors">Todo</button>
         </div>
       </div>
 
-      <!-- Tabla de datos moderna y compacta -->
-      <div class="bg-white/70 backdrop-blur-xl rounded-3xl shadow-2xl border border-white/20 overflow-hidden">
-        <div class="bg-gradient-to-r from-slate-800 via-gray-800 to-zinc-800 px-6 py-4">
-          <div class="flex items-center justify-between">
-            <div class="flex items-center gap-3">
-              <div class="p-2 bg-white/20 backdrop-blur-lg rounded-xl">
-                <svg class="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 17V7m0 10a2 2 0 01-2 2H5a2 2 0 01-2-2V7a2 2 0 012-2h2a2 2 0 012 2m0 10a2 2 0 002 2h2a2 2 0 002-2M9 7a2 2 0 012-2h2a2 2 0 012 2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v2M7 7h10"></path>
-                </svg>
-              </div>
-              <div class="flex items-center gap-4">
-                <h3 class="text-xl font-bold text-white">Detalle por Mes</h3>
-                <!-- Resumen condensado cuando está colapsado -->
-                <div v-if="!mostrarDetalleMensual" class="flex items-center gap-3 text-sm text-white/80">
-                  <span class="bg-white/10 px-2 py-1 rounded">
-                    {{ (estadisticas?.estadisticasMensuales || []).length }} meses
-                  </span>
-                  <span class="bg-blue-500/20 px-2 py-1 rounded">
-                    {{ (estadisticas?.estadisticasMensuales || []).reduce((sum, item) => sum + item.movimientos, 0) }} mov.
-                  </span>
-                  <span class="bg-green-500/20 px-2 py-1 rounded">
-                    {{ (estadisticas?.estadisticasMensuales || []).reduce((sum, item) => sum + item.solicitudes, 0) }} sol.
-                  </span>
-                </div>
-              </div>
+      <!-- Detalle por mes -->
+      <div class="bg-white rounded-2xl border border-slate-200/70 shadow-sm overflow-hidden">
+        <div class="flex items-center justify-between px-5 py-4 border-b border-slate-100">
+          <div class="flex items-center gap-4">
+            <h3 class="text-base font-bold text-slate-900">Detalle por mes</h3>
+            <div v-if="!mostrarDetalleMensual" class="hidden sm:flex items-center gap-2 text-xs">
+              <span class="badge-slate">{{ (estadisticas?.estadisticasMensuales || []).length }} meses</span>
+              <span class="badge-indigo">{{ (estadisticas?.estadisticasMensuales || []).reduce((sum, item) => sum + item.movimientos, 0) }} mov.</span>
+              <span class="badge-emerald">{{ (estadisticas?.estadisticasMensuales || []).reduce((sum, item) => sum + item.solicitudes, 0) }} sol.</span>
             </div>
-            <!-- Botón para colapsar/expandir -->
-            <button 
-              @click="mostrarDetalleMensual = !mostrarDetalleMensual"
-              class="flex items-center gap-2 px-3 py-1 bg-white/20 hover:bg-white/30 rounded-lg transition-colors text-white text-sm"
-            >
-              <svg 
-                :class="['w-4 h-4 transition-transform', mostrarDetalleMensual ? 'rotate-180' : '']" 
-                fill="none" stroke="currentColor" viewBox="0 0 24 24"
-              >
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path>
-              </svg>
-              {{ mostrarDetalleMensual ? 'Ocultar' : 'Mostrar' }}
-            </button>
           </div>
+          <button @click="mostrarDetalleMensual = !mostrarDetalleMensual" class="btn-secondary !py-1.5">
+            <svg :class="['w-4 h-4 transition-transform', mostrarDetalleMensual ? 'rotate-180' : '']" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path>
+            </svg>
+            {{ mostrarDetalleMensual ? 'Ocultar' : 'Mostrar' }}
+          </button>
         </div>
-        
+
         <div v-show="mostrarDetalleMensual" class="overflow-x-auto">
           <table class="w-full">
-            <thead class="bg-gradient-to-r from-slate-600 to-gray-700">
-              <tr>
-                <th class="px-4 py-2 text-left text-xs font-bold text-white uppercase tracking-wider">Mes</th>
-                <th class="px-4 py-2 text-left text-xs font-bold text-white uppercase tracking-wider">Año</th>
-                <th class="px-4 py-2 text-left text-xs font-bold text-white uppercase tracking-wider">Movimientos</th>
-                <th class="px-4 py-2 text-left text-xs font-bold text-white uppercase tracking-wider">Solicitudes</th>
-                <th class="px-4 py-2 text-left text-xs font-bold text-white uppercase tracking-wider">Total</th>
+            <thead>
+              <tr class="border-b border-slate-200 bg-slate-50">
+                <th class="px-4 py-3 text-left text-xs font-semibold text-slate-500 uppercase tracking-wider">Mes</th>
+                <th class="px-4 py-3 text-left text-xs font-semibold text-slate-500 uppercase tracking-wider">Año</th>
+                <th class="px-4 py-3 text-left text-xs font-semibold text-slate-500 uppercase tracking-wider">Movimientos</th>
+                <th class="px-4 py-3 text-left text-xs font-semibold text-slate-500 uppercase tracking-wider">Solicitudes</th>
+                <th class="px-4 py-3 text-left text-xs font-semibold text-slate-500 uppercase tracking-wider">Total</th>
               </tr>
             </thead>
-            <tbody class="bg-white/90 backdrop-blur-sm divide-y divide-gray-200/50">
-              <tr v-for="item in estadisticas?.estadisticasMensuales || []" 
-                  :key="`${item.mes}-${item.year}`"
-                  class="hover:bg-gradient-to-r hover:from-slate-50 hover:to-gray-50 transition-all duration-200">
-                <td class="px-4 py-3 whitespace-nowrap">
-                  <div class="text-sm font-bold text-gray-900">{{ item.mes }}</div>
-                </td>
-                <td class="px-4 py-3 whitespace-nowrap">
-                  <div class="text-sm text-gray-700">{{ item.year }}</div>
-                </td>
-                <td class="px-4 py-3 whitespace-nowrap">
-                  <span class="inline-flex items-center px-2 py-1 rounded-full text-xs font-semibold bg-gradient-to-r from-blue-100 to-indigo-100 text-blue-800">
-                    {{ item.movimientos }}
-                  </span>
-                </td>
-                <td class="px-4 py-3 whitespace-nowrap">
-                  <span class="inline-flex items-center px-2 py-1 rounded-full text-xs font-semibold bg-gradient-to-r from-green-100 to-emerald-100 text-green-800">
-                    {{ item.solicitudes }}
-                  </span>
-                </td>
-                <td class="px-4 py-3 whitespace-nowrap">
-                  <span class="inline-flex items-center px-2 py-1 rounded-full text-xs font-semibold bg-gradient-to-r from-gray-100 to-slate-100 text-gray-800">
-                    {{ item.movimientos + item.solicitudes }}
-                  </span>
-                </td>
+            <tbody class="divide-y divide-slate-100">
+              <tr v-for="item in estadisticas?.estadisticasMensuales || []" :key="`${item.mes}-${item.year}`" class="hover:bg-slate-50 transition-colors">
+                <td class="px-4 py-3 whitespace-nowrap text-sm font-semibold text-slate-900">{{ item.mes }}</td>
+                <td class="px-4 py-3 whitespace-nowrap text-sm text-slate-500">{{ item.year }}</td>
+                <td class="px-4 py-3 whitespace-nowrap"><span class="badge-indigo">{{ item.movimientos }}</span></td>
+                <td class="px-4 py-3 whitespace-nowrap"><span class="badge-emerald">{{ item.solicitudes }}</span></td>
+                <td class="px-4 py-3 whitespace-nowrap"><span class="badge-slate">{{ item.movimientos + item.solicitudes }}</span></td>
               </tr>
             </tbody>
           </table>
         </div>
       </div>
     </div>
+  </div>
 </template>
 
 <script setup lang="ts">
@@ -581,19 +277,22 @@ import {
   PointElement,
   LineElement,
   BarElement,
+  Filler,
   Title,
   Tooltip,
   Legend,
 } from 'chart.js';
-import { Line, Bar } from 'vue-chartjs';
-import { 
-  estadisticasService, 
-  // agruparRegionesComerciales, // Comentado para mantener regiones separadas
-  type EstadisticasResumen, 
+import { Line } from 'vue-chartjs';
+import {
+  estadisticasService,
+  type EstadisticasResumen,
   type EstadisticasRegion,
   type RepartoRotura
 } from '@/services/estadisticasService';
 import { excelService } from '@/services/excelService';
+import CustomSelect from '@/components/CustomSelect.vue';
+import DatePicker from '@/components/DatePicker.vue';
+import SkeletonLoader from '@/components/SkeletonLoader.vue';
 
 ChartJS.register(
   CategoryScale,
@@ -601,6 +300,7 @@ ChartJS.register(
   PointElement,
   LineElement,
   BarElement,
+  Filler,
   Title,
   Tooltip,
   Legend
@@ -611,7 +311,9 @@ const estadisticas = ref<EstadisticasResumen | null>(null);
 const estadisticasRegiones = ref<EstadisticasRegion[]>([]);
 const repartosRoturas = ref<RepartoRotura[]>([]);
 const regionSeleccionada = ref<string>('');
-const cargando = ref(false);
+// Arranca en true: la carga se dispara en onMounted, así el primer frame ya
+// muestra el skeleton en vez de "Sin datos".
+const cargando = ref(true);
 const cargandoRepartos = ref(false);
 const error = ref<string>('');
 const mensajeExito = ref<string>('');
@@ -624,11 +326,46 @@ const filtrosExportacion = ref({
   region: ''
 });
 
-// Computed properties
-const regionesUrgentes = computed(() => 
-  estadisticasRegiones.value.filter(region => region.urgente)
-);
+const regionOptions = [
+  { value: '', label: 'Todas las regiones' },
+  { value: 'COMERCIAL', label: 'Comercial (Agrupado)' },
+  { value: 'NORTE', label: 'Norte' },
+  { value: 'SUR', label: 'Sur' },
+  { value: 'ESTE', label: 'Este' },
+  { value: 'OESTE', label: 'Oeste' },
+  { value: 'LA_PLATA', label: 'La Plata' },
+  { value: 'NAFA', label: 'NAFA' }
+];
 
+// KPIs superiores
+const kpis = computed(() => [
+  {
+    label: 'Total movimientos',
+    value: estadisticas.value?.totalMovimientos ?? 0,
+    chip: 'bg-gradient-to-br from-violet-500 to-indigo-600',
+    icon: 'M13 10V3L4 14h7v7l9-11h-7z'
+  },
+  {
+    label: 'Total solicitudes',
+    value: estadisticas.value?.totalSolicitudes ?? 0,
+    chip: 'bg-gradient-to-br from-emerald-500 to-teal-600',
+    icon: 'M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z'
+  },
+  {
+    label: 'Mov. este mes',
+    value: estadisticas.value?.movimientosMesActual ?? 0,
+    chip: 'bg-gradient-to-br from-fuchsia-500 to-pink-600',
+    icon: 'M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z'
+  },
+  {
+    label: 'Sol. este mes',
+    value: estadisticas.value?.solicitudesMesActual ?? 0,
+    chip: 'bg-gradient-to-br from-amber-500 to-orange-600',
+    icon: 'M5 10l7-7m0 0l7 7m-7-7v18'
+  }
+]);
+
+// Computed properties
 const rankingCelularesRotos = computed(() => {
   return estadisticasRegiones.value
     .filter(region => region.totalUsuarios > 0) // Solo regiones con usuarios
@@ -636,9 +373,35 @@ const rankingCelularesRotos = computed(() => {
     .slice(0, 6); // Top 6 regiones
 });
 
+const rankClass = (index: number) => {
+  if (index === 0) return 'bg-amber-500 text-white';
+  if (index === 1) return 'bg-indigo-500 text-white';
+  if (index === 2) return 'bg-rose-500 text-white';
+  return 'bg-slate-200 text-slate-600';
+};
+
+// Composición de solicitudes por región (barras apiladas)
+const solicitudesPorRegion = computed(() => {
+  return estadisticasRegiones.value
+    .map(r => ({
+      region: r.region,
+      total: r.totalSolicitudes || 0,
+      urgente: r.urgente,
+      segs: [
+        { key: 'pend', label: 'Pendientes', value: r.solicitudesPendientes || 0, color: 'bg-amber-500' },
+        { key: 'proc', label: 'En proceso', value: r.solicitudesEnProceso || 0, color: 'bg-indigo-500' },
+        { key: 'res', label: 'Resueltas', value: r.solicitudesResueltas || 0, color: 'bg-emerald-500' },
+        { key: 'rot', label: 'Por rotura', value: r.solicitudesPorRotura || 0, color: 'bg-rose-500' }
+      ]
+    }))
+    .sort((a, b) => b.total - a.total);
+});
+
+const pctOf = (value: number, total: number) => (total > 0 ? `${(value / total) * 100}%` : '0%');
+
 const chartData = computed(() => {
   if (!estadisticas.value?.estadisticasMensuales) {
-    return { labels: [], datasets: [] };
+    return { labels: [] as string[], datasets: [] as any[] };
   }
 
   return {
@@ -646,92 +409,53 @@ const chartData = computed(() => {
     datasets: [
       {
         label: 'Movimientos',
-        backgroundColor: 'rgb(59, 130, 246)',
-        borderColor: 'rgb(59, 130, 246)',
+        borderColor: '#a78bfa',
+        backgroundColor: 'rgba(167, 139, 250, 0.15)',
         data: estadisticas.value.estadisticasMensuales.map(item => item.movimientos),
-        tension: 0.4
+        tension: 0.4,
+        borderWidth: 2,
+        fill: true
       },
       {
         label: 'Solicitudes',
-        backgroundColor: 'rgb(34, 197, 94)',
-        borderColor: 'rgb(34, 197, 94)',
+        borderColor: '#34d399',
+        backgroundColor: 'rgba(52, 211, 153, 0.15)',
         data: estadisticas.value.estadisticasMensuales.map(item => item.solicitudes),
-        tension: 0.4
+        tension: 0.4,
+        borderWidth: 2,
+        fill: true
       }
     ]
   };
-});
-
-const regionesChartData = computed(() => {
-  if (estadisticasRegiones.value.length === 0) {
-    console.log('No hay datos de regiones para el gráfico');
-    return { labels: [], datasets: [] };
-  }
-
-  const labels = estadisticasRegiones.value.map(r => r.region.replace('_', ' '));
-  console.log('📊 Gráfico de regiones - Labels:', labels, 'Cantidad:', estadisticasRegiones.value.length);
-  
-  const chartData = {
-    labels,
-    datasets: [
-      {
-        label: 'Pendientes',
-        backgroundColor: 'rgba(251, 191, 36, 0.8)',
-        data: estadisticasRegiones.value.map(r => r.solicitudesPendientes)
-      },
-      {
-        label: 'En Proceso',
-        backgroundColor: 'rgba(59, 130, 246, 0.8)',
-        data: estadisticasRegiones.value.map(r => r.solicitudesEnProceso)
-      },
-      {
-        label: 'Resueltas',
-        backgroundColor: 'rgba(34, 197, 94, 0.8)',
-        data: estadisticasRegiones.value.map(r => r.solicitudesResueltas)
-      },
-      {
-        label: 'Por Rotura',
-        backgroundColor: 'rgba(239, 68, 68, 0.8)',
-        data: estadisticasRegiones.value.map(r => r.solicitudesPorRotura)
-      }
-    ]
-  };
-  
-  return chartData;
 });
 
 const chartOptions = {
   responsive: true,
   maintainAspectRatio: false,
+  interaction: { intersect: false, mode: 'index' as const },
   plugins: {
-    legend: {
-      position: 'top' as const,
-    },
-    title: {
-      display: false
+    legend: { display: false },
+    title: { display: false },
+    tooltip: {
+      backgroundColor: '#0f172a',
+      borderColor: 'rgba(255,255,255,0.12)',
+      borderWidth: 1,
+      padding: 10,
+      cornerRadius: 8
     }
   },
+  elements: { point: { radius: 0, hoverRadius: 4 } },
   scales: {
-    y: {
-      beginAtZero: true
-    }
-  }
-};
-
-const barChartOptions = {
-  responsive: true,
-  maintainAspectRatio: false,
-  plugins: {
-    legend: {
-      position: 'top' as const,
+    x: {
+      grid: { display: false },
+      border: { display: false },
+      ticks: { color: '#94a3b8', font: { size: 11 } }
     },
-    title: {
-      display: false
-    }
-  },
-  scales: {
     y: {
-      beginAtZero: true
+      beginAtZero: true,
+      grid: { color: 'rgba(255,255,255,0.06)' },
+      border: { display: false },
+      ticks: { color: '#64748b', font: { size: 11 }, maxTicksLimit: 5 }
     }
   }
 };
@@ -740,12 +464,11 @@ const barChartOptions = {
 const cargarEstadisticas = async () => {
   cargando.value = true;
   error.value = '';
-  
+
   try {
     estadisticas.value = await estadisticasService.obtenerEstadisticas();
   } catch (err: any) {
     console.error('Error al cargar estadísticas:', err);
-    // Usar el mensaje específico del error
     error.value = err.message || 'Error al cargar las estadísticas. Verifique la conexión con el servidor.';
     estadisticas.value = null;
   } finally {
@@ -756,23 +479,17 @@ const cargarEstadisticas = async () => {
 const cargarEstadisticasRegiones = async () => {
   cargando.value = true;
   error.value = '';
-  
+
   try {
     console.log('Cargando estadísticas de regiones...');
     let regionesData = await estadisticasService.obtenerTodasLasRegiones();
-    console.log('Estadísticas de regiones cargadas (antes de filtro):', regionesData);
-    
+
     // Filtrar SISTEMAS si existe
     regionesData = regionesData.filter(region => region.region !== 'SISTEMAS');
-    console.log('Estadísticas de regiones después de filtro:', regionesData);
-    
-    // Mantener regiones separadas (no agrupar en comercial)
-    console.log('Estadísticas de regiones manteniendo separación:', regionesData);
-    
+
     estadisticasRegiones.value = regionesData;
   } catch (err: any) {
     console.error('Error al cargar estadísticas por región:', err);
-    // Usar el mensaje específico del error
     error.value = err.message || 'Error al cargar las estadísticas por región. Verifique la conexión con el servidor.';
     estadisticasRegiones.value = [];
   } finally {
@@ -792,13 +509,13 @@ const cargarDatosPorRegion = async () => {
     const fechaActual = new Date();
     const fechaHasta = fechaActual.toISOString().split('T')[0];
     const fechaDesde = new Date(fechaActual.getFullYear(), fechaActual.getMonth(), 1).toISOString().split('T')[0];
-    
+
     const estadisticaRegion = await estadisticasService.obtenerEstadisticasPorRegion(
-      regionSeleccionada.value, 
-      fechaDesde, 
+      regionSeleccionada.value,
+      fechaDesde,
       fechaHasta
     );
-    
+
     estadisticasRegiones.value = [estadisticaRegion];
   } catch (err) {
     console.error('Error al cargar datos por región:', err);
@@ -821,7 +538,6 @@ const cargarRepartosRoturas = async () => {
   cargandoRepartos.value = true;
   try {
     repartosRoturas.value = await estadisticasService.obtenerRepartosConMasRoturas();
-    console.log('Repartos con roturas cargados:', repartosRoturas.value);
   } catch (err: any) {
     console.error('Error al cargar repartos con roturas:', err);
     error.value = err.message || 'Error al cargar repartos con roturas';
@@ -831,17 +547,10 @@ const cargarRepartosRoturas = async () => {
   }
 };
 
-const verDetalleRegion = (region: string) => {
-  regionSeleccionada.value = region;
-  cargarDatosPorRegion();
-};
-
 const exportarEstadisticas = async () => {
   try {
-    // Usar el nuevo método de exportación completa que maneja múltiples hojas
     await excelService.exportarEstadisticasCompletas();
-    
-    mostrarExito('📊 Estadísticas completas exportadas correctamente');
+    mostrarExito('Estadísticas completas exportadas correctamente');
   } catch (error: any) {
     console.error('Error al exportar estadísticas completas:', error);
     mostrarError(error.message || 'Error al exportar las estadísticas');
@@ -850,10 +559,9 @@ const exportarEstadisticas = async () => {
 
 const exportarMovimientos = async () => {
   try {
-    // Primero intentar con filtros, si falla usar método básico
     let movimientos;
     const hayFiltros = Object.values(filtrosExportacion.value).some(v => v);
-    
+
     if (hayFiltros) {
       try {
         movimientos = await estadisticasService.exportarMovimientosConFiltros(
@@ -868,22 +576,20 @@ const exportarMovimientos = async () => {
     } else {
       movimientos = await estadisticasService.obtenerMovimientosDetalle();
     }
-    
+
     const fechaHoy = new Date().toISOString().split('T')[0];
-    
+
     if (hayFiltros) {
-      // Usar exportación con filtros si hay filtros aplicados
       excelService.exportarMovimientosConFiltros(
-        movimientos, 
+        movimientos,
         filtrosExportacion.value,
         `movimientos_filtrados_${fechaHoy}.xlsx`
       );
     } else {
-      // Usar exportación normal si no hay filtros
       excelService.exportarMovimientos(movimientos, `movimientos_${fechaHoy}.xlsx`);
     }
-    
-    mostrarExito(`📱 ${movimientos.length} movimientos exportados correctamente`);
+
+    mostrarExito(`${movimientos.length} movimientos exportados correctamente`);
   } catch (err) {
     console.error('Error al exportar movimientos:', err);
     mostrarError('Error al exportar movimientos');
@@ -892,10 +598,9 @@ const exportarMovimientos = async () => {
 
 const exportarSolicitudes = async () => {
   try {
-    // Primero intentar con filtros, si falla usar método básico
     let solicitudes;
     const hayFiltros = Object.values(filtrosExportacion.value).some(v => v);
-    
+
     if (hayFiltros) {
       try {
         solicitudes = await estadisticasService.exportarSolicitudesConFiltros(
@@ -911,22 +616,20 @@ const exportarSolicitudes = async () => {
     } else {
       solicitudes = await estadisticasService.obtenerSolicitudesDetalle();
     }
-    
+
     const fechaHoy = new Date().toISOString().split('T')[0];
-    
+
     if (hayFiltros) {
-      // Usar exportación con filtros si hay filtros aplicados
       excelService.exportarSolicitudesConFiltros(
-        solicitudes, 
+        solicitudes,
         filtrosExportacion.value,
         `solicitudes_filtradas_${fechaHoy}.xlsx`
       );
     } else {
-      // Usar exportación normal si no hay filtros
       excelService.exportarSolicitudes(solicitudes, `solicitudes_${fechaHoy}.xlsx`);
     }
-    
-    mostrarExito(`📋 ${solicitudes.length} solicitudes exportadas correctamente`);
+
+    mostrarExito(`${solicitudes.length} solicitudes exportadas correctamente`);
   } catch (err) {
     console.error('Error al exportar solicitudes:', err);
     mostrarError('Error al exportar solicitudes');
@@ -938,12 +641,11 @@ const exportarCompleto = async () => {
     error.value = 'No hay datos para exportar';
     return;
   }
-  
+
   try {
     const hayFiltros = Object.values(filtrosExportacion.value).some(v => v);
     let movimientos, solicitudes;
-    
-    // Obtener datos con o sin filtros
+
     if (hayFiltros) {
       try {
         [movimientos, solicitudes] = await Promise.all([
@@ -972,20 +674,20 @@ const exportarCompleto = async () => {
         estadisticasService.obtenerSolicitudesDetalle()
       ]);
     }
-    
+
     const fechaHoy = new Date().toISOString().split('T')[0];
-    const nombreArchivo = hayFiltros 
+    const nombreArchivo = hayFiltros
       ? `reporte_completo_filtrado_${fechaHoy}.xlsx`
       : `reporte_completo_${fechaHoy}.xlsx`;
-      
+
     excelService.exportarCompleto(
       estadisticas.value.estadisticasMensuales,
       movimientos,
       solicitudes,
       nombreArchivo
     );
-    
-    mostrarExito('📦 Reporte completo exportado correctamente');
+
+    mostrarExito('Reporte completo exportado correctamente');
   } catch (err) {
     console.error('Error al exportar reporte completo:', err);
     mostrarError('Error al exportar reporte completo');
@@ -994,20 +696,13 @@ const exportarCompleto = async () => {
 
 const exportarRepartosRoturas = async () => {
   try {
-    // Usar el método de exportación completa que incluye los repartos con roturas
     await excelService.exportarEstadisticasCompletas();
-    
-    mostrarExito('🏆 Estadísticas completas con ranking de repartos exportadas correctamente');
+    mostrarExito('Estadísticas completas con ranking de repartos exportadas correctamente');
   } catch (err: any) {
     console.error('Error al exportar repartos con roturas:', err);
     mostrarError(err.message || 'Error al exportar repartos con roturas');
   }
 };
-
-// Lifecycle
-onMounted(() => {
-  cargarTodosDatos();
-});
 
 // Función auxiliar para limpiar mensajes
 const limpiarMensajes = () => {
@@ -1028,4 +723,9 @@ const mostrarError = (mensajeError: string) => {
   mensajeExito.value = '';
   limpiarMensajes();
 };
+
+// Lifecycle
+onMounted(() => {
+  cargarTodosDatos();
+});
 </script>

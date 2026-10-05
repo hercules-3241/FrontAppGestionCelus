@@ -45,6 +45,27 @@ class ExcelService {
     this.exportarAExcel([{ nombre: 'Movimientos', datos: datosExcel }], nombreArchivo);
   }
 
+  // Exportar movimientos con el nuevo formato
+  exportarMovimientosActualizados(movimientos: any[], nombreArchivo: string = 'movimientos.xlsx') {
+    const datosExcel = movimientos.map(movimiento => ({
+      'ID': movimiento.id || '',
+      'Fecha': movimiento.fecha ? new Date(movimiento.fecha).toLocaleDateString('es-AR') : '',
+      'Hora': movimiento.fecha ? new Date(movimiento.fecha).toLocaleTimeString('es-AR') : '',
+      'Tipo': movimiento.tipo || '',
+      'Código Interno': movimiento.celular?.codigoInterno || '',
+      'Número Serie': movimiento.celular?.numeroSerie || '',
+      'Marca': movimiento.celular?.marca || '',
+      'Modelo': movimiento.celular?.modelo || '',
+      'Estado Celular': movimiento.estadoCelular || '',
+      'Usuario - Nº Reparto': movimiento.usuario?.numReparto || movimiento.numRepartoUsuario || '',
+      'Usuario - Nombre': movimiento.usuario?.nombre || '',
+      'Usuario - Apellido': movimiento.usuario?.apellido || '',
+      'Descripción': movimiento.descripcion || ''
+    }));
+
+    this.exportarAExcel([{ nombre: 'Movimientos', datos: datosExcel }], nombreArchivo);
+  }
+
   exportarSolicitudes(solicitudes: SolicitudDetalle[], nombreArchivo: string = 'solicitudes.xlsx') {
     const datosExcel = solicitudes.map((solicitud:any) => ({
       'ID': solicitud.id,
@@ -427,6 +448,60 @@ class ExcelService {
 
   exportarReportesRoturas(reportes: any[], nombreArchivo: string = 'reportes_roturas.xlsx') {
     this.exportarAExcel([{ nombre: 'Reportes Roturas', datos: reportes }], nombreArchivo);
+  }
+
+  // Exportar solicitudes por mes específico
+  exportarSolicitudesPorMes(
+    solicitudes: any[], 
+    mes: number,
+    año: number
+  ) {
+    const datosExcel: any[] = solicitudes.map((solicitud: any) => ({
+      'ID': solicitud.id || '',
+      'Fecha': solicitud.fecha || '',
+      'Solicitante': solicitud.nomSolicitante || '',
+      'Usuario/Reparto': solicitud.usuario || '',
+      'Región': solicitud.region || '',
+      'Tipo Solicitud': (solicitud.tipoSolicitud || '').replace(/_/g, ' '),
+      'Motivo': solicitud.motivo || '',
+      'Necesita Línea': solicitud.necesitaLinea ? 'Sí' : 'No',
+      'Estado': solicitud.estado || 'PENDIENTE',
+      'Tiene Denuncia': solicitud.tieneDenunciaAdjunta ? 'Sí' : 'No'
+    }));
+
+    // Agregar resumen al final
+    const totalSolicitudes = solicitudes.length;
+    const porTipo = solicitudes.reduce((acc: any, s: any) => {
+      acc[s.tipoSolicitud || 'Sin tipo'] = (acc[s.tipoSolicitud || 'Sin tipo'] || 0) + 1;
+      return acc;
+    }, {});
+    const porEstado = solicitudes.reduce((acc: any, s: any) => {
+      acc[s.estado || 'PENDIENTE'] = (acc[s.estado || 'PENDIENTE'] || 0) + 1;
+      return acc;
+    }, {});
+
+    const filaVacia = { 'ID': '', 'Fecha': '', 'Solicitante': '', 'Usuario/Reparto': '', 'Región': '', 'Tipo Solicitud': '', 'Motivo': '', 'Necesita Línea': '', 'Estado': '', 'Tiene Denuncia': '' };
+
+    // Agregar filas de resumen
+    datosExcel.push(filaVacia);
+    datosExcel.push({ 'ID': 'RESUMEN', 'Fecha': '', 'Solicitante': '', 'Usuario/Reparto': '', 'Región': '', 'Tipo Solicitud': '', 'Motivo': '', 'Necesita Línea': '', 'Estado': '', 'Tiene Denuncia': '' });
+    datosExcel.push({ 'ID': 'Total Solicitudes:', 'Fecha': totalSolicitudes.toString(), 'Solicitante': '', 'Usuario/Reparto': '', 'Región': '', 'Tipo Solicitud': '', 'Motivo': '', 'Necesita Línea': '', 'Estado': '', 'Tiene Denuncia': '' });
+    datosExcel.push(filaVacia);
+    datosExcel.push({ 'ID': 'Por Tipo:', 'Fecha': '', 'Solicitante': '', 'Usuario/Reparto': '', 'Región': '', 'Tipo Solicitud': '', 'Motivo': '', 'Necesita Línea': '', 'Estado': '', 'Tiene Denuncia': '' });
+    Object.entries(porTipo).forEach(([tipo, cantidad]) => {
+      datosExcel.push({ 'ID': tipo.replace(/_/g, ' '), 'Fecha': (cantidad as number).toString(), 'Solicitante': '', 'Usuario/Reparto': '', 'Región': '', 'Tipo Solicitud': '', 'Motivo': '', 'Necesita Línea': '', 'Estado': '', 'Tiene Denuncia': '' });
+    });
+    datosExcel.push(filaVacia);
+    datosExcel.push({ 'ID': 'Por Estado:', 'Fecha': '', 'Solicitante': '', 'Usuario/Reparto': '', 'Región': '', 'Tipo Solicitud': '', 'Motivo': '', 'Necesita Línea': '', 'Estado': '', 'Tiene Denuncia': '' });
+    Object.entries(porEstado).forEach(([estado, cantidad]) => {
+      datosExcel.push({ 'ID': estado, 'Fecha': (cantidad as number).toString(), 'Solicitante': '', 'Usuario/Reparto': '', 'Región': '', 'Tipo Solicitud': '', 'Motivo': '', 'Necesita Línea': '', 'Estado': '', 'Tiene Denuncia': '' });
+    });
+
+    const meses = ['Enero', 'Febrero', 'Marzo', 'Abril', 'Mayo', 'Junio', 'Julio', 'Agosto', 'Septiembre', 'Octubre', 'Noviembre', 'Diciembre'];
+    const nombreMes = meses[mes - 1];
+    const nombreFinal = `solicitudes_${nombreMes}_${año}.xlsx`;
+    
+    this.exportarAExcel([{ nombre: `Solicitudes ${nombreMes} ${año}`, datos: datosExcel }], nombreFinal);
   }
 }
 

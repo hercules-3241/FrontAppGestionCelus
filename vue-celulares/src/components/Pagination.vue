@@ -1,14 +1,14 @@
 <template>
-  <div class="flex items-center justify-between bg-white/70 backdrop-blur-xl rounded-2xl shadow-lg border border-white/20 px-6 py-4 mt-6">
+  <div class="flex flex-col sm:flex-row items-center justify-between gap-4 card px-5 py-3">
     <!-- Información de registros -->
-    <div class="flex items-center text-sm text-gray-700">
-      <span class="mr-2">Mostrando</span>
-      <span class="font-semibold">{{ startRecord }}</span>
+    <div class="flex items-center text-sm text-slate-500">
+      <span class="mr-1">Mostrando</span>
+      <span class="font-semibold text-slate-700">{{ startRecord }}</span>
       <span class="mx-1">-</span>
-      <span class="font-semibold">{{ endRecord }}</span>
-      <span class="mx-2">de</span>
-      <span class="font-semibold">{{ totalRecords }}</span>
-      <span class="ml-2">registros</span>
+      <span class="font-semibold text-slate-700">{{ endRecord }}</span>
+      <span class="mx-1">de</span>
+      <span class="font-semibold text-slate-700">{{ totalRecords }}</span>
+      <span class="ml-1">registros</span>
     </div>
 
     <!-- Controles de paginación -->
@@ -18,10 +18,10 @@
         @click="goToPreviousPage"
         :disabled="currentPage === 1"
         :class="[
-          'flex items-center px-3 py-2 text-sm font-medium rounded-xl transition-all duration-200',
+          'flex items-center px-3 py-2 text-sm font-medium rounded-lg transition-colors',
           currentPage === 1
-            ? 'text-gray-400 cursor-not-allowed bg-gray-100'
-            : 'text-gray-700 bg-white hover:bg-gray-50 hover:shadow-md border border-gray-200'
+            ? 'text-slate-300 cursor-not-allowed'
+            : 'text-slate-600 bg-white hover:bg-slate-50 border border-slate-200'
         ]"
       >
         <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -72,10 +72,10 @@
         @click="goToNextPage"
         :disabled="currentPage === totalPages"
         :class="[
-          'flex items-center px-3 py-2 text-sm font-medium rounded-xl transition-all duration-200',
+          'flex items-center px-3 py-2 text-sm font-medium rounded-lg transition-colors',
           currentPage === totalPages
-            ? 'text-gray-400 cursor-not-allowed bg-gray-100'
-            : 'text-gray-700 bg-white hover:bg-gray-50 hover:shadow-md border border-gray-200'
+            ? 'text-slate-300 cursor-not-allowed'
+            : 'text-slate-600 bg-white hover:bg-slate-50 border border-slate-200'
         ]"
       >
         Siguiente
@@ -86,12 +86,12 @@
     </div>
 
     <!-- Selector de items por página -->
-    <div class="flex items-center space-x-2 text-sm">
-      <label class="text-gray-700">Items por página:</label>
+    <div class="flex items-center gap-2 text-sm">
+      <label class="text-slate-500">Por página:</label>
       <select
         :value="itemsPerPage"
         @change="changeItemsPerPage"
-        class="border border-gray-300 rounded-lg px-3 py-1 text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white"
+        class="border border-slate-300 rounded-lg px-3 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500/40 focus:border-indigo-500 bg-white text-slate-700"
       >
         <option value="10">10</option>
         <option value="25">25</option>
@@ -174,10 +174,10 @@ const showRightEllipsis = computed(() => {
 const pageButtonClass = (page) => {
   const isCurrentPage = page === props.currentPage;
   return [
-    'px-3 py-2 text-sm font-medium rounded-xl transition-all duration-200',
+    'min-w-[2.25rem] px-3 py-2 text-sm font-medium rounded-lg transition-colors',
     isCurrentPage
-      ? 'bg-gradient-to-r from-blue-500 to-purple-600 text-white shadow-lg'
-      : 'text-gray-700 bg-white hover:bg-gray-50 hover:shadow-md border border-gray-200'
+      ? 'bg-indigo-600 text-white'
+      : 'text-slate-600 bg-white hover:bg-slate-50 border border-slate-200'
   ];
 };
 

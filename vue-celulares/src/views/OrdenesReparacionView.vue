@@ -5,10 +5,13 @@ import { proveedorService } from '@/services/proveedorService.ts';
 import { celularService } from '@/services/celularService.ts';
 import { excelService } from '@/services/excelService.ts';
 import Pagination from '@/components/Pagination.vue';
+import SkeletonLoader from '@/components/SkeletonLoader.vue';
 
 // Estado principal
 const ordenes = ref([]);
-const loading = ref(false);
+// Arranca en true: la carga se dispara en onMounted, así el primer frame ya
+// muestra el skeleton en vez del estado vacío.
+const loading = ref(true);
 const loadingItems = ref(false);
 const creando = ref(false);
 const agregandoItem = ref(false);
@@ -396,7 +399,8 @@ onMounted(() => cargarDatos());
             </button>
           </div>
         </div>
-        <div v-if="loading" class="flex items-center justify-center py-12"><div class="flex items-center gap-3 text-gray-600"><div class="animate-spin rounded-full h-8 w-8 border-b-2 border-red-600"></div><span class="text-lg font-medium">Cargando órdenes...</span></div></div>
+        <SkeletonLoader v-if="loading" variant="table" :rows="8" :cols="9"
+                        :ratios="[1.3, 1.4, 1.2, 1.4, 2, 1.2, 1.2, 1.6, 1.4]" label="Cargando órdenes…" />
         <div v-else-if="ordenesFiltradas.length === 0" class="text-center py-12"><div class="flex flex-col items-center gap-4"><div class="p-4 bg-gray-100 rounded-2xl"><svg class="w-12 h-12 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 17v-6l3-3 3 3v6m5 4H4"/></svg></div><p class="text-gray-500 text-lg">No hay órdenes</p></div></div>
         <div v-else class="space-y-4">
           <div class="hidden xl:block overflow-x-auto rounded-2xl border border-gray-200/50 shadow-xl">

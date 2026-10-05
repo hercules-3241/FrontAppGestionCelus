@@ -2,10 +2,13 @@
 import { ref, reactive, computed, onMounted } from 'vue';
 import { proveedorService } from '@/services/proveedorService.ts';
 import Pagination from '@/components/Pagination.vue';
+import SkeletonLoader from '@/components/SkeletonLoader.vue';
 
 // Estado principal
 const proveedores = ref([]);
-const loading = ref(false);
+// Arranca en true: la carga se dispara en onMounted, así el primer frame ya
+// muestra el skeleton en vez del estado vacío.
+const loading = ref(true);
 const notification = reactive({ show: false, type: 'success', message: '' });
 
 // Formulario
@@ -305,12 +308,8 @@ onMounted(() => cargarProveedores());
           </div>
         </div>
 
-        <div v-if="loading" class="flex items-center justify-center py-12">
-          <div class="flex items-center gap-3 text-gray-600">
-            <div class="animate-spin rounded-full h-8 w-8 border-b-2 border-fuchsia-600"></div>
-            <span class="text-lg font-medium">Cargando proveedores...</span>
-          </div>
-        </div>
+        <SkeletonLoader v-if="loading" variant="table" :rows="8" :cols="7"
+                        :ratios="[1.6, 1.4, 1, 0.8, 1.2, 2, 1.2]" label="Cargando proveedores…" />
         <div v-else-if="proveedoresFiltrados.length === 0" class="text-center py-12">
           <div class="flex flex-col items-center gap-4">
             <div class="p-4 bg-gray-100 rounded-2xl">

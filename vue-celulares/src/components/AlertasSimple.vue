@@ -131,6 +131,7 @@
 
 <script setup>
 import { ref, onMounted, onUnmounted, computed } from 'vue'
+import { authService } from '@/services/authService'
 
 // Estados
 const alertas = ref([])
@@ -159,7 +160,7 @@ const cargarAlertas = async () => {
     loading.value = true
     const response = await fetch('/api/notificaciones/no-leidas', {
       headers: {
-        'Authorization': 'Basic ' + localStorage.getItem('auth')
+        'Authorization': authService.getAuthHeader()
       }
     })
     
@@ -179,7 +180,7 @@ const cargarTodasLasAlertas = async () => {
     loading.value = true
     const response = await fetch('/api/alertas', {
       headers: {
-        'Authorization': 'Basic ' + localStorage.getItem('auth')
+        'Authorization': authService.getAuthHeader()
       }
     })
     
@@ -208,7 +209,7 @@ const marcarLeida = async (alertaId) => {
     const response = await fetch(`/api/notificaciones/${alertaId}/marcar-leida`, {
       method: 'PUT',
       headers: {
-        'Authorization': 'Basic ' + localStorage.getItem('auth')
+        'Authorization': authService.getAuthHeader()
       }
     })
     
@@ -232,7 +233,7 @@ const eliminar = async (alertaId) => {
     const response = await fetch(`/api/notificaciones/${alertaId}`, {
       method: 'DELETE',
       headers: {
-        'Authorization': 'Basic ' + localStorage.getItem('auth')
+        'Authorization': authService.getAuthHeader()
       }
     })
     

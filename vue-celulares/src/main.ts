@@ -19,7 +19,7 @@ async function initializeApp() {
 }
 
 (window as any).authService = authService;
-(window as any).setBasic = (u: string, p: string) => authService.login(u, p);
+(window as any).login = (u: string, p: string) => authService.login(u, p);
 
 
 (window as any).clearSession = () => {

@@ -26,9 +26,8 @@
       </div>
 
       <!-- Loading -->
-      <div v-if="cargando" class="flex justify-center items-center py-20">
-        <div class="animate-spin rounded-full h-12 w-12 border-b-2 border-purple-600"></div>
-      </div>
+      <SkeletonLoader v-if="cargando" variant="table" :rows="8" :cols="5"
+                      :ratios="[1.8, 1, 1.2, 1.4, 1.2]" label="Cargando usuarios…" />
 
       <!-- Error -->
       <div v-else-if="error" class="p-6 text-center">
@@ -342,6 +341,7 @@ import {
   type CrearUsuarioRequest,
   type ActualizarUsuarioRequest
 } from '@/services/usuariosService';
+import SkeletonLoader from '@/components/SkeletonLoader.vue';
 
 // Estado reactivo
 const usuarios = ref<UsuarioSistema[]>([]);
@@ -370,7 +370,9 @@ const usuariosOrdenados = computed(() => {
   });
 });
 
-const cargando = ref(false);
+// Arranca en true: la carga se dispara en onMounted, así el primer frame ya
+// muestra el skeleton en vez del estado vacío.
+const cargando = ref(true);
 const guardando = ref(false);
 const error = ref<string | null>(null);
 

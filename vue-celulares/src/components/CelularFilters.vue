@@ -1,74 +1,50 @@
 <template>
-  <div class="bg-white rounded-lg shadow-sm border border-gray-200 p-4 mb-6">
-    <div class="flex items-center justify-between mb-4">
-      <h3 class="text-lg font-medium text-gray-900">Filtros</h3>
-      <button @click="clearFilters" 
-              class="text-sm text-gray-500 hover:text-gray-700">
-        Limpiar filtros
-      </button>
-    </div>
-    
-    <div class="grid grid-cols-1 md:grid-cols-6 gap-4">
+  <div>
+    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6 gap-4">
       <div>
-        <label class="block text-sm font-medium text-gray-700 mb-1">Código Interno</label>
-        <input 
-          v-model="filters.codigoInterno"
-          type="text" 
-          placeholder="Buscar por código"
-          class="w-full px-3 py-2 border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500"
-        />
+        <label class="field-label">Código interno</label>
+        <input v-model="filters.codigoInterno" type="text" placeholder="Buscar por código" class="input" />
       </div>
-      
+
       <div>
-        <label class="block text-sm font-medium text-gray-700 mb-1">Código APP</label>
-        <input 
-          v-model="filters.codigoApp"
-          type="text" 
-          placeholder="Buscar por código APP"
-          class="w-full px-3 py-2 border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500"
-        />
+        <label class="field-label">Código APP</label>
+        <input v-model="filters.codigoApp" type="text" placeholder="Buscar por código APP" class="input" />
       </div>
-      
+
       <div>
-        <label class="block text-sm font-medium text-gray-700 mb-1">Marca</label>
-        <input 
-          v-model="filters.marca"
-          type="text" 
-          placeholder="Buscar por marca"
-          class="w-full px-3 py-2 border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500"
-        />
+        <label class="field-label">Marca</label>
+        <input v-model="filters.marca" type="text" placeholder="Buscar por marca" class="input" />
       </div>
-      
+
       <div>
-        <label class="block text-sm font-medium text-gray-700 mb-1">Estado</label>
-        <select v-model="filters.estado" 
-                class="w-full px-3 py-2 border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500">
+        <label class="field-label">Estado</label>
+        <select v-model="filters.estado" class="input">
           <option value="">Todos los estados</option>
           <option value="NUEVO">Nuevo</option>
           <option value="REACONDICIONADO">Reacondicionado</option>
           <option value="ROTO">Roto</option>
         </select>
       </div>
-      
+
       <div>
-        <label class="block text-sm font-medium text-gray-700 mb-1">Usuario</label>
-        <input 
-          v-model="filters.usuario"
-          type="text" 
-          placeholder="Buscar por usuario"
-          class="w-full px-3 py-2 border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500"
-        />
+        <label class="field-label">Usuario</label>
+        <input v-model="filters.usuario" type="text" placeholder="Buscar por usuario" class="input" />
       </div>
-      
+
       <div>
-        <label class="block text-sm font-medium text-gray-700 mb-1">Asignación</label>
-        <select v-model="filters.asignado" 
-                class="w-full px-3 py-2 border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500">
+        <label class="field-label">Asignación</label>
+        <select v-model="filters.asignado" class="input">
           <option value="">Todos</option>
           <option value="true">Asignados</option>
           <option value="false">Sin asignar</option>
         </select>
       </div>
+    </div>
+
+    <div class="flex justify-end mt-4">
+      <button @click="clearFilters" class="text-sm font-medium text-slate-500 hover:text-indigo-600 transition-colors">
+        Limpiar filtros
+      </button>
     </div>
   </div>
 </template>
