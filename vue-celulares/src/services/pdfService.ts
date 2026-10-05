@@ -1,5 +1,6 @@
 import jsPDF from 'jspdf';
 import type { Solicitud } from './solicitudService';
+import { formatearCargo } from '@/utils/empleadosSolicitud';
 
 // Funciones helper para formatear enums
 const formatearTipoSolicitud = (tipo: string): string => {
@@ -123,46 +124,44 @@ export const generarPDFSolicitud = async (solicitud: Solicitud) => {
     yPos += 25;
     
     // === DATOS DEL SOLICITANTE ===
-    yPos = checkPageBreak(yPos, 45);
+    yPos = checkPageBreak(yPos, 61);
     doc.setFillColor(239, 246, 255);
-    doc.rect(margin, yPos - 3, contentWidth, 40, 'F');
+    doc.rect(margin, yPos - 3, contentWidth, 56, 'F');
     doc.setDrawColor(191, 219, 254);
-    doc.rect(margin, yPos - 3, contentWidth, 40);
-    
+    doc.rect(margin, yPos - 3, contentWidth, 56);
+
     doc.setFontSize(12);
     doc.setFont('helvetica', 'bold');
     doc.setTextColor(30, 64, 175);
     doc.text('DATOS DEL SOLICITANTE', margin + 5, yPos + 5);
-    
+
     doc.setTextColor(...colorTexto);
     doc.setFontSize(10);
     doc.setFont('helvetica', 'normal');
     yPos += 12;
-    
-    // Datos en formato más compacto
-    doc.setFont('helvetica', 'bold');
-    doc.text('Nombre:', margin + 5, yPos);
-    doc.setFont('helvetica', 'normal');
-    doc.text(solicitud.nomSolicitante || 'N/A', margin + 30, yPos);
-    
-    doc.setFont('helvetica', 'bold');
-    doc.text('Fecha:', 110, yPos);
-    doc.setFont('helvetica', 'normal');
-    doc.text(solicitud.fecha || 'N/A', 125, yPos);
-    yPos += 8;
-    
-    doc.setFont('helvetica', 'bold');
-    doc.text('Nº Reparto:', margin + 5, yPos);
-    doc.setFont('helvetica', 'normal');
-    doc.text(solicitud.usuario || 'N/A', margin + 30, yPos);
-    
-    doc.setFont('helvetica', 'bold');
-    doc.text('Región:', 110, yPos);
-    doc.setFont('helvetica', 'normal');
-    doc.text(formatearRegion(solicitud.region || ''), 125, yPos);
-    
-    yPos += 20;
-    
+
+    const filas: [string, string, string, string][] = [
+      ['Solicitante:', solicitud.nomSolicitante || 'N/A', 'Cargo:', solicitud.cargoSolicitante ? formatearCargo(solicitud.cargoSolicitante) : 'N/A'],
+      ['Fecha carga:', solicitud.fecha || 'N/A', 'Fecha incidencia:', solicitud.fechaIncidencia || 'N/A'],
+      ['Usuario:', solicitud.usuario || 'N/A', 'Legajo:', solicitud.legajo || 'N/A'],
+      ['Región:', formatearRegion(solicitud.region || ''), '', '']
+    ];
+    filas.forEach(([etiquetaIzq, valorIzq, etiquetaDer, valorDer]) => {
+      doc.setFont('helvetica', 'bold');
+      doc.text(etiquetaIzq, margin + 5, yPos);
+      doc.setFont('helvetica', 'normal');
+      doc.text(valorIzq, margin + 35, yPos);
+      if (etiquetaDer) {
+        doc.setFont('helvetica', 'bold');
+        doc.text(etiquetaDer, 110, yPos);
+        doc.setFont('helvetica', 'normal');
+        doc.text(valorDer, 145, yPos);
+      }
+      yPos += 8;
+    });
+
+    yPos += 12;
+
     // === DETALLES DE LA SOLICITUD ===
     yPos = checkPageBreak(yPos, 35);
     doc.setFillColor(240, 253, 244);
@@ -192,7 +191,8 @@ export const generarPDFSolicitud = async (solicitud: Solicitud) => {
     yPos += 20;
     
     // === MOTIVO ===
-    const motivo = solicitud.motivo || 'Sin descripción proporcionada';
+    const motivoBase = solicitud.motivo || 'Sin descripción proporcionada';
+    const motivo = solicitud.observacion ? `${motivoBase}\n\nObservación: ${solicitud.observacion}` : motivoBase;
     const motivoLineas = doc.splitTextToSize(motivo, contentWidth - 20);
     const motivoHeight = Math.max(25, (motivoLineas.length * 5) + 15);
     

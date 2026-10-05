@@ -85,22 +85,6 @@
         </div>
         
         <form @submit.prevent="crearSolicitud" class="grid grid-cols-1 md:grid-cols-2 gap-6">
-          <div class="space-y-2">
-            <label class="block text-sm font-semibold text-gray-700">Tu Nombre</label>
-            <input v-model="form.nomSolicitante" 
-                   type="text" 
-                   class="w-full border-2 border-gray-200 rounded-2xl px-4 py-3 focus:ring-4 focus:ring-blue-500/20 focus:border-blue-500 transition-all duration-200 bg-white/60 backdrop-blur-sm" 
-                   placeholder="Ingresa tu nombre completo"
-                   required />
-          </div>
-          <div class="space-y-2">
-            <label class="block text-sm font-semibold text-gray-700">Número de Reparto</label>
-            <input v-model="form.usuario" 
-                   type="text" 
-                   class="w-full border-2 border-gray-200 rounded-2xl px-4 py-3 focus:ring-4 focus:ring-blue-500/20 focus:border-blue-500 transition-all duration-200 bg-white/60 backdrop-blur-sm" 
-                   placeholder="Ej: 12345"
-                   required />
-          </div>
           <div v-if="authService.isAdmin()" class="space-y-2">
             <label class="block text-sm font-semibold text-gray-700">Región</label>
             <select v-model="form.region" 
@@ -133,26 +117,80 @@
               <option value="PERDIDA">PERDIDA</option>
             </select>
           </div>
+          <div class="space-y-2">
+            <label for="fecha-incidencia" class="block text-sm font-semibold text-gray-700">Fecha de Incidencia</label>
+            <input id="fecha-incidencia"
+                   v-model="form.fechaIncidencia"
+                   type="date"
+                   :max="hoyLocal()"
+                   class="w-full border-2 border-gray-200 rounded-2xl px-4 py-3 focus:ring-4 focus:ring-blue-500/20 focus:border-blue-500 transition-all duration-200 bg-white/60 backdrop-blur-sm"
+                   required />
+          </div>
+          <div class="space-y-2">
+            <label for="solicitante" class="block text-sm font-semibold text-gray-700">Solicitante (Supervisor o Regional)</label>
+            <EmpleadoAutocomplete id="solicitante"
+                                  v-model="form.nomSolicitante"
+                                  :empleados="solicitantes"
+                                  :loading="loadingEmpleados"
+                                  :disabled="regionPendiente"
+                                  :input-class="inputClase"
+                                  :placeholder="regionPendiente ? 'Primero selecciona la región' : 'Buscar supervisor o regional'"
+                                  empty-text="No hay supervisores ni regionales en la región" />
+          </div>
+          <div class="space-y-2">
+            <label for="cargo-solicitante" class="block text-sm font-semibold text-gray-700">Cargo del Solicitante</label>
+            <input id="cargo-solicitante"
+                   :value="cargoSolicitante"
+                   type="text"
+                   class="w-full border-2 border-gray-200 rounded-2xl px-4 py-3 focus:ring-4 focus:ring-blue-500/20 focus:border-blue-500 transition-all duration-200 bg-white/60 backdrop-blur-sm text-gray-500"
+                   placeholder="Se completa al elegir el solicitante"
+                   readonly />
+          </div>
+          <div class="space-y-2">
+            <label for="usuario-equipo" class="block text-sm font-semibold text-gray-700">Usuario del Equipo</label>
+            <EmpleadoAutocomplete id="usuario-equipo"
+                                  v-model="form.usuario"
+                                  :empleados="empleadosRegion"
+                                  :loading="loadingEmpleados"
+                                  :disabled="regionPendiente"
+                                  :input-class="inputClase"
+                                  :placeholder="regionPendiente ? 'Primero selecciona la región' : 'Buscar por número de reparto'"
+                                  empty-text="No hay usuarios en la región" />
+          </div>
+          <div class="space-y-2">
+            <label for="legajo" class="block text-sm font-semibold text-gray-700">Legajo</label>
+            <input id="legajo"
+                   v-model="form.legajo"
+                   type="text"
+                   maxlength="50"
+                   class="w-full border-2 border-gray-200 rounded-2xl px-4 py-3 focus:ring-4 focus:ring-blue-500/20 focus:border-blue-500 transition-all duration-200 bg-white/60 backdrop-blur-sm"
+                   placeholder="Legajo del usuario del equipo"
+                   required />
+          </div>
+          <p v-if="errorEmpleados" class="md:col-span-2 text-sm text-red-600">{{ errorEmpleados }}</p>
           <div class="md:col-span-2 space-y-2">
-            <label class="block text-sm font-semibold text-gray-700">Tipo de Problema</label>
-            <select v-model="form.motivoTipo" 
-                    class="w-full border-2 border-gray-200 rounded-2xl px-4 py-3 focus:ring-4 focus:ring-blue-500/20 focus:border-blue-500 transition-all duration-200 bg-white/60 backdrop-blur-sm" 
+            <label for="motivo" class="block text-sm font-semibold text-gray-700">Motivo</label>
+            <select id="motivo"
+                    v-model="form.motivo"
+                    class="w-full border-2 border-gray-200 rounded-2xl px-4 py-3 focus:ring-4 focus:ring-blue-500/20 focus:border-blue-500 transition-all duration-200 bg-white/60 backdrop-blur-sm"
                     required>
-              <option value="">Seleccionar tipo de problema</option>
+              <option value="">Seleccionar motivo</option>
               <option v-for="tipo in tiposMotivo" :key="tipo" :value="tipo">{{ tipo }}</option>
             </select>
           </div>
 
-          <div class="md:col-span-2 space-y-2" v-if="form.motivoTipo === 'OTRO' || form.motivoTipo">
-            <label class="block text-sm font-semibold text-gray-700">
-              {{ form.motivoTipo === 'OTRO' ? 'Descripción del problema' : 'Detalles adicionales (opcional)' }}
+          <div class="md:col-span-2 space-y-2">
+            <label for="observacion" class="block text-sm font-semibold text-gray-700">
+              {{ form.motivo === 'OTRO' ? 'Observación' : 'Observación (opcional)' }}
             </label>
-            <textarea 
-              v-model="form.motivo" 
-              class="w-full border-2 border-gray-200 rounded-2xl px-4 py-3 focus:ring-4 focus:ring-blue-500/20 focus:border-blue-500 transition-all duration-200 bg-white/60 backdrop-blur-sm resize-none" 
-              rows="4" 
-              :placeholder="form.motivoTipo === 'OTRO' ? 'Describe detalladamente el problema...' : 'Agrega detalles adicionales si es necesario...'"
-              :required="form.motivoTipo === 'OTRO'"
+            <textarea
+              id="observacion"
+              v-model="form.observacion"
+              class="w-full border-2 border-gray-200 rounded-2xl px-4 py-3 focus:ring-4 focus:ring-blue-500/20 focus:border-blue-500 transition-all duration-200 bg-white/60 backdrop-blur-sm resize-none"
+              rows="4"
+              maxlength="1000"
+              :placeholder="form.motivo === 'OTRO' ? 'Describe detalladamente el problema...' : 'Agrega detalles adicionales si es necesario...'"
+              :required="form.motivo === 'OTRO'"
             ></textarea>
           </div>
 
@@ -238,13 +276,6 @@
                 <span class="ml-3 text-gray-700 group-hover:text-gray-900">No necesito línea</span>
               </label>
             </div>
-          </div>
-          <div class="space-y-2">
-            <label class="block text-sm font-semibold text-gray-700">Fecha</label>
-            <input v-model="form.fecha" 
-                   type="date" 
-                   class="w-full border-2 border-gray-200 rounded-2xl px-4 py-3 focus:ring-4 focus:ring-blue-500/20 focus:border-blue-500 transition-all duration-200 bg-white/60 backdrop-blur-sm" 
-                   required />
           </div>
           <div class="md:col-span-2 flex justify-end items-center mt-6">
             <button 
@@ -437,8 +468,20 @@
                 </div>
                 <span class="text-gray-900 font-medium">{{ solicitud.usuario }}</span>
               </div>
+              <div class="bg-white/50 rounded-xl p-3 sm:p-4">
+                <span class="block font-semibold text-gray-700 mb-2">Fecha de incidencia:</span>
+                <span class="text-gray-900 font-medium text-xs sm:text-sm">{{ solicitud.fechaIncidencia || '-' }}</span>
+              </div>
+              <div class="bg-white/50 rounded-xl p-3 sm:p-4">
+                <span class="block font-semibold text-gray-700 mb-2">Cargo solicitante:</span>
+                <span class="text-gray-900 font-medium text-xs sm:text-sm">{{ solicitud.cargoSolicitante ? formatearCargo(solicitud.cargoSolicitante) : '-' }}</span>
+              </div>
+              <div class="bg-white/50 rounded-xl p-3 sm:p-4">
+                <span class="block font-semibold text-gray-700 mb-2">Legajo:</span>
+                <span class="text-gray-900 font-medium text-xs sm:text-sm">{{ solicitud.legajo || '-' }}</span>
+              </div>
             </div>
-            
+
             <div class="bg-white/50 rounded-xl p-4">
               <div class="flex items-center gap-2 mb-3">
                 <svg class="w-4 h-4 text-red-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -447,6 +490,10 @@
                 <span class="font-semibold text-gray-700">Motivo:</span>
               </div>
               <p class="text-gray-900 leading-relaxed">{{ solicitud.motivo }}</p>
+              <template v-if="solicitud.observacion">
+                <span class="block font-semibold text-gray-700 mt-3 mb-1">Observación:</span>
+                <p class="text-gray-900 leading-relaxed whitespace-pre-line">{{ solicitud.observacion }}</p>
+              </template>
             </div>
           </div>
           
@@ -913,8 +960,8 @@
 </template>
 
 <script setup>
-import { ref, reactive, onMounted, computed } from 'vue';
-import { solicitudService, EstadoSolicitud } from '@/services/solicitudService';
+import { ref, reactive, onMounted, computed, watch } from 'vue';
+import { solicitudService, EstadoSolicitud, TIPOS_MOTIVO } from '@/services/solicitudService';
 import { authService } from '@/services/authService';
 import { excelService } from '@/services/excelService';
 import { pdfService } from '@/services/pdfService';
@@ -922,6 +969,10 @@ import { obtenerMiFlota, obtenerMisSolicitudes, obtenerSolicitudesMiRegion, crea
 import Pagination from '@/components/Pagination.vue';
 import SkeletonLoader from '@/components/SkeletonLoader.vue';
 import PdfThumbnail from '@/components/PdfThumbnail.vue';
+import EmpleadoAutocomplete from '@/components/EmpleadoAutocomplete.vue';
+import { useEmpleadosSolicitud } from '@/composables/useEmpleadosSolicitud';
+import { hoyLocal } from '@/utils/empleadosSolicitud';
+import { mensajeErrorApi } from '@/utils/apiError';
 
 // Funciones helper para formatear enums
 const formatearTipoSolicitud = (tipo) => {
@@ -997,11 +1048,12 @@ const initializeForm = () => {
   const baseForm = {
     id: '',
     nomSolicitante: '',
-    fecha: new Date().toISOString().split('T')[0],
+    fechaIncidencia: hoyLocal(),
     usuario: '',
+    legajo: '',
     tipoSolicitud: '',
-    motivoTipo: '',
     motivo: '',
+    observacion: '',
     necesitaLinea: false,
     archivoDenuncia: null
   };
@@ -1016,14 +1068,31 @@ const initializeForm = () => {
 
 const form = reactive(initializeForm());
 
-// Opciones para el tipo de motivo
-const tiposMotivo = [
-  'MODULO ROTO',
-  'BATERIA',
-  'LENTITUD', 
-  'NO PRENDE',
-  'OTRO'
-];
+const inputClase = 'w-full border-2 border-gray-200 rounded-2xl px-4 py-3 focus:ring-4 focus:ring-blue-500/20 focus:border-blue-500 transition-all duration-200 bg-white/60 backdrop-blur-sm';
+
+// Non-admins get their region's employees straight from the backend; admins narrow by the region they pick.
+const regionFiltro = computed(() => (authService.isAdmin() ? form.region : null));
+const regionPendiente = computed(() => authService.isAdmin() && !form.region);
+const {
+  empleadosRegion,
+  solicitantes,
+  loading: loadingEmpleados,
+  error: errorEmpleados,
+  cargar: cargarEmpleados,
+  buscarPorNumReparto
+} = useEmpleadosSolicitud(regionFiltro);
+
+const cargoSolicitante = computed(() =>
+  form.nomSolicitante ? formatearCargo(buscarPorNumReparto(form.nomSolicitante)?.cargo) : ''
+);
+
+// A selection from the previous region would be rejected by the backend.
+watch(() => form.region, () => {
+  form.nomSolicitante = '';
+  form.usuario = '';
+});
+
+const tiposMotivo = TIPOS_MOTIVO;
 
 // Computed para paginación de Mis Solicitudes
 const totalPagesSolicitudes = computed(() => {
@@ -1194,6 +1263,11 @@ const crearSolicitud = async () => {
   try {
     loading.value = true;
     
+    if (!form.nomSolicitante || !form.usuario) {
+      mostrarNotificacion('Selecciona el solicitante y el usuario del equipo de la lista', 'error');
+      return;
+    }
+
     // Validar que si es ROBO, tenga denuncia adjunta
     if (form.tipoSolicitud === 'ROBO' && !form.archivoDenuncia) {
       mostrarNotificacion('Debe adjuntar la denuncia PDF para solicitudes de robo', 'error');
@@ -1211,7 +1285,6 @@ const crearSolicitud = async () => {
     // Preparar payload (sin el archivo)
     const payload = {
       ...form,
-      motivo: form.motivoTipo === 'OTRO' ? form.motivo : `${form.motivoTipo}${form.motivo ? ' - ' + form.motivo : ''}`,
       necesitaLinea: form.tipoSolicitud === 'NUEVO_EQUIPO' ? form.necesitaLinea : false,
       estado: EstadoSolicitud.PENDIENTE
     };
@@ -1240,24 +1313,7 @@ const crearSolicitud = async () => {
     mostrarNotificacion('¡Solicitud creada exitosamente! Recibirás una respuesta pronto.');
     
     // Limpiar formulario
-    const formReset = {
-      id: '',
-      nomSolicitante: '',
-      fecha: new Date().toISOString().split('T')[0],
-      usuario: '',
-      tipoSolicitud: '',
-      motivoTipo: '',
-      motivo: '',
-      necesitaLinea: false,
-      archivoDenuncia: null
-    };
-    
-    // Solo incluir región si es admin
-    if (authService.isAdmin()) {
-      formReset.region = '';
-    }
-    
-    Object.assign(form, formReset);
+    Object.assign(form, initializeForm());
     
     // Limpiar el input file
     const input = document.querySelector('input[type="file"]');
@@ -1268,7 +1324,7 @@ const crearSolicitud = async () => {
     
   } catch (error) {
     console.error('Error al crear solicitud:', error);
-    mostrarNotificacion('Error al crear la solicitud. Intenta nuevamente.', 'error');
+    mostrarNotificacion(mensajeErrorApi(error, 'Error al crear la solicitud. Intenta nuevamente.'), 'error');
   } finally {
     loading.value = false;
   }
@@ -1479,6 +1535,7 @@ onMounted(() => {
   // usuarioActual.value = obtenerUsuarioActual();
   
   cargarMisSolicitudes();
+  cargarEmpleados();
 });
 
 // Cargar Mi Flota

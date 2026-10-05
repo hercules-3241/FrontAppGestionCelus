@@ -60,15 +60,6 @@
         <form @submit.prevent="crearSolicitud" class="p-6">
           <div class="grid grid-cols-1 md:grid-cols-2 gap-x-6 gap-y-5">
             <div>
-              <label class="field-label">Solicitante</label>
-              <input v-model="form.nomSolicitante" type="text" class="input" placeholder="Nombre del solicitante" required />
-            </div>
-            <div>
-              <label class="field-label">Reparto</label>
-              <input v-model="form.usuario" type="text" class="input" placeholder="Área de reparto" required />
-            </div>
-
-            <div>
               <label class="field-label">Región</label>
               <CustomSelect v-model="form.region" :options="regionOptions" placeholder="Seleccionar región" />
             </div>
@@ -78,8 +69,34 @@
             </div>
 
             <div>
-              <label class="field-label">Motivo</label>
-              <input v-model="form.motivo" type="text" class="input" placeholder="Describe el motivo de la solicitud" required />
+              <label for="admin-solicitante" class="field-label">Solicitante (Supervisor o Regional)</label>
+              <EmpleadoAutocomplete id="admin-solicitante" v-model="form.nomSolicitante" :empleados="solicitantes"
+                                    :loading="loadingEmpleados" :disabled="!form.region" input-class="input"
+                                    :placeholder="form.region ? 'Buscar supervisor o regional' : 'Primero selecciona la región'"
+                                    empty-text="No hay supervisores ni regionales en la región" />
+            </div>
+            <div>
+              <label for="admin-cargo" class="field-label">Cargo del solicitante</label>
+              <input id="admin-cargo" :value="cargoSolicitante" type="text" class="input text-slate-500"
+                     placeholder="Se completa al elegir el solicitante" readonly />
+            </div>
+
+            <div>
+              <label for="admin-usuario" class="field-label">Usuario del equipo</label>
+              <EmpleadoAutocomplete id="admin-usuario" v-model="form.usuario" :empleados="empleadosRegion"
+                                    :loading="loadingEmpleados" :disabled="!form.region" input-class="input"
+                                    :placeholder="form.region ? 'Buscar por número de reparto' : 'Primero selecciona la región'"
+                                    empty-text="No hay usuarios en la región" />
+            </div>
+            <div>
+              <label for="admin-legajo" class="field-label">Legajo</label>
+              <input id="admin-legajo" v-model="form.legajo" type="text" maxlength="50" class="input"
+                     placeholder="Legajo del usuario del equipo" required />
+            </div>
+
+            <div>
+              <label class="field-label">Fecha de incidencia</label>
+              <DatePicker v-model="form.fechaIncidencia" placeholder="dd/mm/aaaa" />
             </div>
             <div>
               <label class="field-label">¿Necesita línea?</label>
@@ -87,9 +104,15 @@
             </div>
 
             <div>
-              <label class="field-label">Fecha</label>
-              <DatePicker v-model="form.fecha" placeholder="dd/mm/aaaa" />
+              <label class="field-label">Motivo</label>
+              <CustomSelect v-model="form.motivo" :options="motivoOptions" placeholder="Seleccionar motivo" />
             </div>
+            <div class="md:col-span-2">
+              <label for="admin-observacion" class="field-label">{{ form.motivo === 'OTRO' ? 'Observación' : 'Observación (opcional)' }}</label>
+              <textarea id="admin-observacion" v-model="form.observacion" rows="3" maxlength="1000" class="input resize-none"
+                        :required="form.motivo === 'OTRO'" placeholder="Detalles adicionales"></textarea>
+            </div>
+            <p v-if="errorEmpleados" class="md:col-span-2 text-sm text-rose-600">{{ errorEmpleados }}</p>
           </div>
 
           <div class="flex justify-end items-center gap-3 mt-6 pt-5 border-t border-slate-100">
@@ -212,6 +235,7 @@
                   <th class="px-4 py-3 text-left text-xs font-semibold text-slate-500 uppercase tracking-wider">Motivo</th>
                   <th class="px-4 py-3 text-center text-xs font-semibold text-slate-500 uppercase tracking-wider">Línea</th>
                   <th class="px-4 py-3 text-left text-xs font-semibold text-slate-500 uppercase tracking-wider">Fecha</th>
+                  <th class="px-4 py-3 text-left text-xs font-semibold text-slate-500 uppercase tracking-wider">Incidencia</th>
                   <th class="px-4 py-3 text-left text-xs font-semibold text-slate-500 uppercase tracking-wider">Estado</th>
                   <th class="px-4 py-3 text-right text-xs font-semibold text-slate-500 uppercase tracking-wider">Acciones</th>
                 </tr>
@@ -220,7 +244,8 @@
                 <tr v-for="solicitud in solicitudesPaginadas" :key="solicitud.id" class="hover:bg-slate-50 transition-colors">
                   <td class="px-4 py-3 whitespace-nowrap">
                     <div class="text-sm font-semibold text-slate-900">{{ solicitud.nomSolicitante }}</div>
-                    <div class="text-xs text-slate-400">{{ solicitud.usuario }}</div>
+                    <div v-if="solicitud.cargoSolicitante" class="text-xs text-slate-500">{{ formatearCargo(solicitud.cargoSolicitante) }}</div>
+                    <div class="text-xs text-slate-400">Usuario: {{ solicitud.usuario }}<span v-if="solicitud.legajo"> · Legajo {{ solicitud.legajo }}</span></div>
                   </td>
                   <td class="px-4 py-3 whitespace-nowrap">
                     <span class="text-sm font-medium text-slate-700">{{ solicitud.region?.replace(/_/g, ' ') }}</span>
@@ -236,11 +261,13 @@
                   </td>
                   <td class="px-4 py-3">
                     <div class="text-sm text-slate-600 max-w-[200px] truncate" :title="solicitud.motivo">{{ solicitud.motivo }}</div>
+                    <div v-if="solicitud.observacion" class="text-xs text-slate-400 max-w-[200px] truncate" :title="solicitud.observacion">{{ solicitud.observacion }}</div>
                   </td>
                   <td class="px-4 py-3 whitespace-nowrap text-center">
                     <span :class="solicitud.necesitaLinea ? 'badge-emerald' : 'badge-slate'">{{ solicitud.necesitaLinea ? 'Sí' : 'No' }}</span>
                   </td>
                   <td class="px-4 py-3 whitespace-nowrap text-sm text-slate-500">{{ solicitud.fecha }}</td>
+                  <td class="px-4 py-3 whitespace-nowrap text-sm text-slate-500">{{ solicitud.fechaIncidencia || '-' }}</td>
                   <td class="px-4 py-3 whitespace-nowrap">
                     <!-- Edición inline -->
                     <div v-if="solicitudEditando === solicitud.id" class="flex items-center gap-2">
@@ -300,8 +327,8 @@
             <div v-for="solicitud in solicitudesPaginadas" :key="solicitud.id" class="p-4">
               <div class="flex items-start justify-between gap-3 mb-3">
                 <div class="min-w-0">
-                  <h3 class="font-semibold text-slate-900 truncate">{{ solicitud.nomSolicitante }}</h3>
-                  <p class="text-sm text-slate-500 truncate">{{ solicitud.usuario }}</p>
+                  <h3 class="font-semibold text-slate-900 truncate">{{ solicitud.nomSolicitante }}<span v-if="solicitud.cargoSolicitante" class="ml-1 text-xs font-normal text-slate-500">{{ formatearCargo(solicitud.cargoSolicitante) }}</span></h3>
+                  <p class="text-sm text-slate-500 truncate">Usuario: {{ solicitud.usuario }}<span v-if="solicitud.legajo"> · Legajo {{ solicitud.legajo }}</span></p>
                 </div>
                 <span :class="estadoBadge(solicitud.estado)">{{ (solicitud.estado || EstadoSolicitud.PENDIENTE).replace(/_/g, ' ') }}</span>
               </div>
@@ -316,6 +343,10 @@
                   <span class="font-medium text-slate-900">{{ solicitud.fecha }}</span>
                 </div>
                 <div class="flex items-center justify-between">
+                  <span class="text-slate-500">Incidencia</span>
+                  <span class="font-medium text-slate-900">{{ solicitud.fechaIncidencia || '-' }}</span>
+                </div>
+                <div class="flex items-center justify-between">
                   <span class="text-slate-500">Tipo</span>
                   <span class="font-medium text-indigo-600">{{ formatTipo(solicitud.tipoSolicitud) }}</span>
                 </div>
@@ -328,6 +359,7 @@
               <div class="mb-3">
                 <span class="text-xs text-slate-400">Motivo</span>
                 <p class="text-sm text-slate-600">{{ solicitud.motivo }}</p>
+                <p v-if="solicitud.observacion" class="text-xs text-slate-500 mt-1 whitespace-pre-line">{{ solicitud.observacion }}</p>
               </div>
 
               <!-- Denuncia (ROBO) -->
@@ -416,12 +448,16 @@
 </template>
 
 <script setup>
-import { ref, reactive, computed, onMounted } from 'vue';
-import { solicitudService, EstadoSolicitud } from '@/services/solicitudService.ts';
+import { ref, reactive, computed, onMounted, watch } from 'vue';
+import { solicitudService, EstadoSolicitud, TIPOS_MOTIVO } from '@/services/solicitudService.ts';
 import { excelService } from '@/services/excelService.ts';
 import PdfThumbnail from '@/components/PdfThumbnail.vue';
 import CustomSelect from '@/components/CustomSelect.vue';
 import DatePicker from '@/components/DatePicker.vue';
+import EmpleadoAutocomplete from '@/components/EmpleadoAutocomplete.vue';
+import { useEmpleadosSolicitud } from '@/composables/useEmpleadosSolicitud';
+import { formatearCargo, hoyLocal } from '@/utils/empleadosSolicitud';
+import { mensajeErrorApi } from '@/utils/apiError';
 import SkeletonLoader from '@/components/SkeletonLoader.vue';
 
 const solicitudes = ref([]);
@@ -507,27 +543,45 @@ const mostrarNotificacion = (mensaje, tipo = 'success') => {
   }, 4000);
 };
 
-const form = reactive({
+const formVacio = () => ({
   id: '',
   nomSolicitante: '',
-  fecha: '',
+  fechaIncidencia: hoyLocal(),
   usuario: '',
+  legajo: '',
   region: '',
   tipoSolicitud: '',
   motivo: '',
+  observacion: '',
   necesitaLinea: true
 });
 
+const form = reactive(formVacio());
+
 const resetForm = () => {
-  form.id = '';
-  form.nomSolicitante = '';
-  form.fecha = '';
-  form.usuario = '';
-  form.region = '';
-  form.tipoSolicitud = '';
-  form.motivo = '';
-  form.necesitaLinea = true;
+  Object.assign(form, formVacio());
 };
+
+const motivoOptions = TIPOS_MOTIVO.map(m => ({ value: m, label: m }));
+
+const {
+  empleadosRegion,
+  solicitantes,
+  loading: loadingEmpleados,
+  error: errorEmpleados,
+  cargar: cargarEmpleados,
+  buscarPorNumReparto
+} = useEmpleadosSolicitud(computed(() => form.region));
+
+const cargoSolicitante = computed(() =>
+  form.nomSolicitante ? formatearCargo(buscarPorNumReparto(form.nomSolicitante)?.cargo) : ''
+);
+
+// A selection from the previous region would be rejected by the backend.
+watch(() => form.region, () => {
+  form.nomSolicitante = '';
+  form.usuario = '';
+});
 
 // Filtros
 const filtros = reactive({
@@ -588,6 +642,14 @@ const cargarSolicitudes = async () => {
 };
 
 const crearSolicitud = async () => {
+  if (!form.region || !form.tipoSolicitud || !form.motivo || !form.fechaIncidencia) {
+    mostrarNotificacion('Completa región, tipo, motivo y fecha de incidencia', 'error');
+    return;
+  }
+  if (!form.nomSolicitante || !form.usuario) {
+    mostrarNotificacion('Selecciona el solicitante y el usuario del equipo de la lista', 'error');
+    return;
+  }
   try {
     form.id = `S${Math.floor(Math.random() * 10000)}`;
     // Preparar payload (asegurar estado inicial)
@@ -597,10 +659,11 @@ const crearSolicitud = async () => {
     };
     await solicitudService.crear(payload);
     mostrarNotificacion('Solicitud creada correctamente');
+    resetForm();
     cargarSolicitudes();
   } catch (error) {
     console.error('Error al crear solicitud:', error?.response?.data || error);
-    mostrarNotificacion('Error al crear solicitud', 'error');
+    mostrarNotificacion(mensajeErrorApi(error, 'Error al crear solicitud'), 'error');
   }
 };
 
@@ -752,5 +815,6 @@ const descargarDenuncia = async (solicitudId) => {
 
 onMounted(() => {
   cargarSolicitudes();
+  cargarEmpleados();
 });
 </script>

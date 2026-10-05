@@ -1,4 +1,5 @@
 import http from './http';
+import type { Cargo } from './usuarioService';
 
 
 const api = http;
@@ -20,7 +21,9 @@ export const Region = {
 } as const;
 export type RegionType = typeof Region[keyof typeof Region];
 
-export type TipoSolicitud = 'CAMBIO_POR_ROTURA' | 'NUEVO_EQUIPO' | 'ROBO';
+export const TIPOS_MOTIVO = ['MODULO ROTO', 'BATERIA', 'LENTITUD', 'NO PRENDE', 'OTRO'] as const;
+
+export type TipoSolicitud = 'CAMBIO_POR_ROTURA' | 'NUEVO_EQUIPO' | 'ROBO' | 'PERDIDA';
 export const EstadoSolicitud = {
   PENDIENTE: 'PENDIENTE',
   EN_PROCESO: 'EN_PROCESO',
@@ -36,6 +39,10 @@ export interface Solicitud {
   region: RegionType;
   tipoSolicitud: TipoSolicitud;
   motivo: string;
+  observacion?: string | null;
+  fechaIncidencia?: string | null;
+  cargoSolicitante?: Cargo | null;
+  legajo?: string | null;
   necesitaLinea: boolean;
   estado?: EstadoSolicitudType;
   tieneDenunciaAdjunta?: boolean;
